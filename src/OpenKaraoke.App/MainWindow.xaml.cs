@@ -23,10 +23,20 @@ public partial class MainWindow : Window
 
         _viewModel = new ShellViewModel();
         DataContext = _viewModel;
-        _viewModel.FullscreenRequested += (_, _) => ToggleFullScreen();
+        _viewModel.FullscreenRequested += OnFullscreenRequested;
         _viewModel.Search.DownloadRequested += OnDownloadRequested;
         Loaded += MainWindow_Loaded;
+        Closed += MainWindow_Closed;
     }
+
+    private void MainWindow_Closed(object? sender, EventArgs e)
+    {
+        _viewModel.Search.DownloadRequested -= OnDownloadRequested;
+        _viewModel.FullscreenRequested -= OnFullscreenRequested;
+        _viewModel.Dispose();
+    }
+
+    private void OnFullscreenRequested(object? sender, EventArgs e) => ToggleFullScreen();
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {

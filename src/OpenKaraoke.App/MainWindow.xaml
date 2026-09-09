@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:OpenKaraoke.App.ViewModels"
+        xmlns:conv="clr-namespace:OpenKaraoke.App.Converters"
         Title="Open Karaoke — 노래방"
         Width="1600" Height="900"
         MinWidth="1280" MinHeight="760"
@@ -14,6 +15,7 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <conv:FractionToGridLengthConverter x:Key="FractionToStar" />
 
         <!-- 검색 결과 목록 스타일 -->
         <Style x:Key="ResultListItem" TargetType="ListBoxItem">
@@ -166,6 +168,16 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource GhostButton}" Margin="0,0,12,0" Padding="14,6" FontSize="14"
+                            VerticalAlignment="Center"
+                            Command="{Binding DataContext.PlaySongCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            ToolTip="이 곡을 바로 재생합니다">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE768;" Style="{StaticResource IconFont}" FontSize="16" Margin="0,0,7,0" />
+                            <TextBlock Text="재생" />
+                        </StackPanel>
+                    </Button>
                     <Border Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="8" Padding="10,5"
                             Margin="0,0,12,0" VerticalAlignment="Center">
                         <Border.Style>
@@ -540,9 +552,15 @@
                         <TextBlock Grid.Column="0" Text="{Binding CurrentTimeText}" Style="{StaticResource MutedText}"
                                    FontSize="15" VerticalAlignment="Center" />
                         <Border Grid.Column="1" Height="8" CornerRadius="4" Background="{StaticResource Brush.SurfaceAlt}"
-                                Margin="16,0" VerticalAlignment="Center">
-                            <Border Width="0" HorizontalAlignment="Left" Background="{StaticResource Brush.AccentGradient}"
-                                    CornerRadius="4" />
+                                Margin="16,0" VerticalAlignment="Center" ClipToBounds="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="{Binding ProgressFraction, Converter={StaticResource FractionToStar}}" />
+                                    <ColumnDefinition Width="{Binding ProgressFraction, Converter={StaticResource FractionToStar}, ConverterParameter=inverse}" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="{StaticResource Brush.AccentGradient}"
+                                        CornerRadius="4" />
+                            </Grid>
                         </Border>
                         <TextBlock Grid.Column="2" Text="{Binding DurationText}" Style="{StaticResource MutedText}"
                                    FontSize="15" VerticalAlignment="Center" />
@@ -557,11 +575,36 @@
                                       Fill="{StaticResource Brush.TextPrimary}" Stretch="Uniform" />
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource PlayButton}" IsEnabled="False" ToolTip="재생 / 일시정지 (Space)"
-                                Margin="18,0">
+                        <Button Style="{StaticResource PlayButton}" Margin="18,0"
+                                IsEnabled="{Binding HasTrack}"
+                                Command="{Binding TogglePlayCommand}"
+                                ToolTip="재생 / 일시정지 (Space)">
                             <Grid Width="34" Height="34">
-                                <Path x:Name="PlayIcon" Data="M 8,2 L 8,30 L 28,16 Z"
-                                      Fill="White" Stretch="Uniform" />
+                                <Path Data="M 8,2 L 8,30 L 28,16 Z" Fill="White" Stretch="Uniform">
+                                    <Path.Style>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
+                                <Path Data="M 6,3 L 13,3 L 13,29 L 6,29 Z M 19,3 L 26,3 L 26,29 L 19,29 Z"
+                                      Fill="White" Stretch="Uniform">
+                                    <Path.Style>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
                             </Grid>
                         </Button>
                         <Button Style="{StaticResource RoundControlButton}" IsEnabled="False" ToolTip="다음 곡 (N)">
@@ -593,13 +636,15 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Style="{StaticResource StepButton}" IsEnabled="False"
+                                <Button Grid.Column="0" Style="{StaticResource StepButton}"
+                                        Command="{Binding KeyDownCommand}"
                                         ToolTip="키 내리기 (-)" Content="−" />
                                 <TextBlock Grid.Column="1" FontSize="26" FontWeight="Bold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <Run Text="{Binding KeySemitones, Mode=OneWay}" /><Run Text=" 반음" />
                                 </TextBlock>
-                                <Button Grid.Column="2" Style="{StaticResource StepButton}" IsEnabled="False"
+                                <Button Grid.Column="2" Style="{StaticResource StepButton}"
+                                        Command="{Binding KeyUpCommand}"
                                         ToolTip="키 올리기 (+)" Content="+" />
                             </Grid>
                         </StackPanel>
@@ -617,12 +662,14 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Style="{StaticResource StepButton}" IsEnabled="False"
+                                <Button Grid.Column="0" Style="{StaticResource StepButton}"
+                                        Command="{Binding TempoDownCommand}"
                                         ToolTip="템포 느리게 ([)" Content="−" />
                                 <TextBlock Grid.Column="1" FontSize="26" FontWeight="Bold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Text="{Binding Tempo, StringFormat=0.00}" />
-                                <Button Grid.Column="2" Style="{StaticResource StepButton}" IsEnabled="False"
+                                           Text="{Binding TempoPercentText}" />
+                                <Button Grid.Column="2" Style="{StaticResource StepButton}"
+                                        Command="{Binding TempoUpCommand}"
                                         ToolTip="템포 빠르게 (])" Content="+" />
                             </Grid>
                         </StackPanel>
