@@ -1,0 +1,20 @@
+# .NET build output
+bin/
+obj/
+*.user
+
+# IDE
+.vs/
+.idea/
+
+# Runtime data (local library DB, media, downloads, logs)
+data/
+native/
+logs/
+
+# Local config with secrets (YouTube API key etc.)
+appsettings.Local.json
+*.local.json
+
+# yt-dlp / ffmpeg bundled binaries downloaded at build/publish time
+tools/downloaded/

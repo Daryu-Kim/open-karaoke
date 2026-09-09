@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2CB04467-4CF2-4D1C-BF56-6CF62735B9D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenKaraoke.Core", "src\OpenKaraoke.Core\OpenKaraoke.Core.csproj", "{80AAB608-4E6B-4B42-938F-0C6A8EF6284F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenKaraoke.App", "src\OpenKaraoke.App\OpenKaraoke.App.csproj", "{FC7AF621-09D3-4EE4-821E-3F94D074ADF2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenKaraoke.App.Tests", "src\OpenKaraoke.App.Tests\OpenKaraoke.App.Tests.csproj", "{164EF4BA-195B-4F88-8871-996733F832ED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{80AAB608-4E6B-4B42-938F-0C6A8EF6284F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80AAB608-4E6B-4B42-938F-0C6A8EF6284F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80AAB608-4E6B-4B42-938F-0C6A8EF6284F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80AAB608-4E6B-4B42-938F-0C6A8EF6284F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC7AF621-09D3-4EE4-821E-3F94D074ADF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC7AF621-09D3-4EE4-821E-3F94D074ADF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC7AF621-09D3-4EE4-821E-3F94D074ADF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC7AF621-09D3-4EE4-821E-3F94D074ADF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{164EF4BA-195B-4F88-8871-996733F832ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{164EF4BA-195B-4F88-8871-996733F832ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{164EF4BA-195B-4F88-8871-996733F832ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{164EF4BA-195B-4F88-8871-996733F832ED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{80AAB608-4E6B-4B42-938F-0C6A8EF6284F} = {2CB04467-4CF2-4D1C-BF56-6CF62735B9D8}
+		{FC7AF621-09D3-4EE4-821E-3F94D074ADF2} = {2CB04467-4CF2-4D1C-BF56-6CF62735B9D8}
+		{164EF4BA-195B-4F88-8871-996733F832ED} = {2CB04467-4CF2-4D1C-BF56-6CF62735B9D8}
+	EndGlobalSection
+EndGlobal
