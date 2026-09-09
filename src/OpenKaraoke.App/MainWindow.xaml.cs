@@ -24,6 +24,56 @@ public partial class MainWindow : Window
         _viewModel = new ShellViewModel();
         DataContext = _viewModel;
         _viewModel.FullscreenRequested += (_, _) => ToggleFullScreen();
+        _viewModel.Search.DownloadRequested += OnDownloadRequested;
+        Loaded += MainWindow_Loaded;
+    }
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        Loaded -= MainWindow_Loaded;
+        try
+        {
+            await _viewModel.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this,
+                $"라이브러리를 여는 중 오류가 발생했습니다.\n\n{ex.Message}",
+                "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    /// <summary>Opens the modal download dialog for the chosen search result.</summary>
+    private void OnDownloadRequested(SearchResultItemViewModel item)
+    {
+        var download = new DownloadViewModel(
+            _viewModel.DownloadRunner,
+            _viewModel.SongStore,
+            _viewModel.SongsDirectory,
+            item);
+
+        var dialog = new DownloadDialog(download) { Owner = this };
+        if (dialog.ShowDialog() == true && download.SavedSong != null)
+        {
+            _ = _viewModel.Library.LoadCommand.ExecuteAsync(null);
+        }
+    }
+
+    private async void DeleteSong_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: SongItemViewModel item } button)
+        {
+            return;
+        }
+
+        MessageBoxResult choice = MessageBox.Show(this,
+            $"“{item.Title}” 곡을 라이브러리에서 삭제할까요?\n로컬에 저장된 음원 파일도 함께 삭제됩니다.",
+            "곡 삭제", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+        if (choice == MessageBoxResult.Yes)
+        {
+            await _viewModel.Library.DeleteSongAsync(item);
+        }
     }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)

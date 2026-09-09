@@ -24,9 +24,13 @@ public partial class SearchViewModel : ObservableObject
 
     public ObservableCollection<SearchResultItemViewModel> Results { get; } = new();
 
+    /// <summary>Raised when the owner presses "다운로드" on a search result tile.</summary>
+    public event Action<SearchResultItemViewModel>? DownloadRequested;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIdle), nameof(IsSearching), nameof(HasResults),
         nameof(IsEmptyResult), nameof(HasError))]
+    [NotifyCanExecuteChangedFor(nameof(DownloadCommand))]
     private SearchUiState _state = SearchUiState.Idle;
 
     public bool IsIdle => State == SearchUiState.Idle;
@@ -102,5 +106,16 @@ public partial class SearchViewModel : ObservableObject
             ErrorMessage = "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
             State = SearchUiState.Error;
         }
+    }
+
+    [RelayCommand(CanExecute = nameof(HasResults))]
+    private void Download(SearchResultItemViewModel? item)
+    {
+        if (item is null || !HasResults)
+        {
+            return;
+        }
+
+        DownloadRequested?.Invoke(item);
     }
 }

@@ -50,12 +50,54 @@
             <Setter Property="ItemContainerStyle" Value="{StaticResource ResultListItem}" />
         </Style>
 
+        <!-- 모드 전환 칩 (내 라이브러리 / 노래 찾기) -->
+        <Style x:Key="LibraryModeChip" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="18,8" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush.SurfaceAlt}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsLibraryMode}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.AccentGradientVertical}" />
+                    <Setter Property="Foreground" Value="White" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SearchModeChip" TargetType="Button" BasedOn="{StaticResource LibraryModeChip}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSearchMode}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.AccentGradientVertical}" />
+                    <Setter Property="Foreground" Value="White" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <!-- 검색 결과 타일 -->
         <DataTemplate DataType="{x:Type vm:SearchResultItemViewModel}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="150" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -77,6 +119,71 @@
                     <TextBlock Text="{Binding DurationText}" FontSize="15" FontWeight="SemiBold"
                                Foreground="{StaticResource Brush.AccentCyan}" />
                 </Border>
+
+                <Button Grid.Column="3" Style="{StaticResource PrimaryButton}" Margin="16,0,0,0"
+                        VerticalAlignment="Center" Padding="16,7"
+                        Command="{Binding DataContext.Search.DownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding}"
+                        ToolTip="이 곡을 로컬 라이브러리에 다운로드합니다">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE896;" Style="{StaticResource IconFont}" FontSize="16" Margin="0,0,8,0" />
+                        <TextBlock Text="다운로드" FontSize="15" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </DataTemplate>
+
+        <!-- 라이브러리 곡 행 -->
+        <DataTemplate DataType="{x:Type vm:SongItemViewModel}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- TJ 번호 칩 -->
+                <Border Grid.Column="0" Background="{StaticResource Brush.AccentMagenta}" CornerRadius="8"
+                        Padding="11,4" Margin="0,0,14,0" VerticalAlignment="Center">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasTjNumber}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding TjDisplay}" FontSize="16" FontWeight="Bold" Foreground="White" />
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Artist}" Style="{StaticResource MutedText}"
+                               FontSize="15" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="8" Padding="10,5"
+                            Margin="0,0,12,0" VerticalAlignment="Center">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DurationText}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock Text="{Binding DurationText}" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{StaticResource Brush.AccentCyan}" />
+                    </Border>
+                    <Button Style="{StaticResource GhostButton}" Content="삭제" Padding="14,6" FontSize="14"
+                            VerticalAlignment="Center" Click="DeleteSong_Click" />
+                </StackPanel>
             </Grid>
         </DataTemplate>
     </Window.Resources>
@@ -186,17 +293,29 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <!-- 영역 탭 -->
+                    <!-- 영역 탭 (모드 전환) -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
-                        <TextBlock Text="전체곡" FontSize="18" FontWeight="Bold"
-                                   Foreground="{StaticResource Brush.AccentCyan}" Margin="0,0,26,0" />
-                        <TextBlock Text="인기곡" Style="{StaticResource MutedText}" FontSize="18" Margin="0,0,26,0" />
-                        <TextBlock Text="최근곡" Style="{StaticResource MutedText}" FontSize="18" Margin="0,0,26,0" />
-                        <TextBlock Text="가수별" Style="{StaticResource MutedText}" FontSize="18" />
+                        <Button Style="{StaticResource LibraryModeChip}" Content="내 라이브러리"
+                                Command="{Binding ShowLibraryCommand}" />
+                        <Button Style="{StaticResource SearchModeChip}" Content="노래 찾기" Margin="4,0,0,0"
+                                Command="{Binding ShowSearchCommand}" />
                     </StackPanel>
 
-                    <!-- 콘텐츠: 검색 상태에 따라 전환되는 영역 -->
-                    <Grid Grid.Row="1" Margin="0,14,0,0" DataContext="{Binding Search}">
+                    <!-- 콘텐츠 영역 (모드에 따라 전환) -->
+                    <Grid Grid.Row="1" Margin="0,14,0,0">
+
+                        <!-- 노래 찾기 (검색) -->
+                        <Grid DataContext="{Binding Search}">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsSearchMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
 
                         <!-- 1) 초기 안내 -->
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -254,6 +373,89 @@
                             <TextBlock Text="검색어를 확인하거나 잠시 후 다시 시도해 주세요" Style="{StaticResource MutedText}"
                                        FontSize="17" HorizontalAlignment="Center" Margin="0,10,0,0" />
                         </StackPanel>
+                        </Grid>
+
+                        <!-- 내 라이브러리 -->
+                        <Grid DataContext="{Binding Library}">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsLibraryMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- 상단: 제목 + 개수 + 필터 -->
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="내 라이브러리" Style="{StaticResource SectionTitle}" />
+                                    <Border Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="12"
+                                            Padding="11,3" Margin="12,0,0,0">
+                                        <TextBlock Text="{Binding CountText}" FontSize="17" FontWeight="Bold"
+                                                   Foreground="{StaticResource Brush.AccentCyan}" />
+                                    </Border>
+                                </StackPanel>
+
+                                <TextBox Grid.Column="1" Style="{StaticResource SearchBox}" Width="300"
+                                         FontSize="16" Padding="12,7" VerticalAlignment="Center"
+                                         Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="제목 · 가수 · TJ 번호로 필터링" />
+                            </Grid>
+
+                            <!-- 곡 목록 -->
+                            <Grid Grid.Row="1" Margin="0,18,0,0">
+
+                                <!-- 빈 상태 -->
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasSongs}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="♫" FontSize="58" HorizontalAlignment="Center"
+                                               Foreground="{StaticResource Brush.TextDim}" />
+                                    <TextBlock Text="아직 저장된 곡이 없습니다" FontSize="24" FontWeight="Bold"
+                                               HorizontalAlignment="Center" Margin="0,16,0,0" />
+                                    <TextBlock Text="노래 찾기에서 원하는 MR 영상을 다운로드하면 여기에 쌓입니다"
+                                               Style="{StaticResource MutedText}" FontSize="16"
+                                               HorizontalAlignment="Center" Margin="0,10,0,0" />
+                                </StackPanel>
+
+                                <!-- 곡 리스트 -->
+                                <ListBox ItemsSource="{Binding Songs}"
+                                         ScrollViewer.CanContentScroll="True"
+                                         VirtualizingPanel.IsVirtualizing="True">
+                                    <ListBox.Style>
+                                        <Style TargetType="ListBox" BasedOn="{StaticResource ResultListBox}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasSongs}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListBox.Style>
+                                </ListBox>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Border>
