@@ -42,6 +42,15 @@ public partial class MainWindow : Window
         }
     }
 
+    private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && !e.IsRepeat && _viewModel.Search.SearchCommand.CanExecute(null))
+        {
+            _viewModel.Search.SearchCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
     private void ToggleFullScreen()
     {
         if (_isFullScreen)

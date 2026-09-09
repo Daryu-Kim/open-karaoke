@@ -1,6 +1,10 @@
+using System.Net.Http;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OpenKaraoke.Core.Configuration;
 using OpenKaraoke.Core.Formatting;
+using OpenKaraoke.Core.Search;
+using OpenKaraoke.Core.Time;
 
 namespace OpenKaraoke.App.ViewModels;
 
@@ -11,6 +15,26 @@ namespace OpenKaraoke.App.ViewModels;
 public partial class ShellViewModel : ObservableObject
 {
     public event EventHandler? FullscreenRequested;
+
+    /// <summary>YouTube search sub-view model; the API key is read from local config.</summary>
+    public SearchViewModel Search { get; }
+
+    public ShellViewModel()
+    {
+        Search = new SearchViewModel(CreateSearchService());
+    }
+
+    private static YoutubeSearchService CreateSearchService()
+    {
+        var http = new HttpClient
+        {
+            BaseAddress = new Uri("https://www.googleapis.com/"),
+            Timeout = TimeSpan.FromSeconds(15),
+        };
+
+        string? apiKey = AppSettings.GetYoutubeApiKey();
+        return new YoutubeSearchService(http, apiKey ?? string.Empty, SystemClock.Instance);
+    }
 
     [ObservableProperty]
     private bool _isFullScreen;
