@@ -1,0 +1,143 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OpenKaraoke.Desktop.Views.SettingsDialog"
+        Title="설정"
+        Width="700"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Brush.Bg}"
+        Foreground="{DynamicResource Brush.TextPrimary}"
+        FontFamily="Malgun Gothic, Noto Sans CJK KR, Noto Sans KR, sans-serif">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.status">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        </Style>
+        <Style Selector="TextBlock.status.failed">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Danger}" />
+        </Style>
+        <Style Selector="TextBlock.status.success">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Success}" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="18" />
+        </Style>
+    </Window.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="30,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 제목 -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="설정" FontSize="26" FontWeight="Bold" />
+            <TextBlock Classes="muted" FontSize="14" Margin="0,6,0,0"
+                       Text="YouTube 검색과 다운로드에 사용할 도구를 이 PC에 맞게 지정합니다." />
+        </StackPanel>
+
+        <!-- 환경 변수 안내 -->
+        <TextBlock Grid.Row="1" Text="{Binding EnvironmentWarning}" TextWrapping="Wrap" FontSize="13"
+                   Foreground="{DynamicResource Brush.AccentMagenta}" Margin="0,14,0,0"
+                   IsVisible="{Binding HasEnvironmentWarning}" />
+
+        <!-- YouTube 검색 -->
+        <StackPanel Grid.Row="2" Margin="0,18,0,0">
+            <TextBlock Classes="formlabel" Text="YouTube 검색" />
+            <Border Classes="card" Margin="0,8,0,0">
+                <StackPanel>
+                    <TextBlock Text="YouTube Data API 키" FontSize="14" FontWeight="SemiBold" />
+                    <TextBox Classes="form" Margin="0,7,0,0" Text="{Binding ApiKey}"
+                             AutomationProperties.Name="YouTube API 키"
+                             Watermark="AIza... 로 시작하는 API 키 39자" />
+                    <TextBlock Classes="muted" FontSize="13" Margin="0,7,0,0" TextWrapping="Wrap"
+                               Text="Google Cloud Console에서 YouTube Data API v3를 사용 설정한 뒤 발급받은 키를 입력하세요." />
+                    <TextBlock Classes="muted" FontSize="13" Margin="0,4,0,0"
+                               Text="{Binding ApiKeyStatus}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- 외부 도구 -->
+        <StackPanel Grid.Row="3" Margin="0,16,0,0">
+            <TextBlock Classes="formlabel" Text="외부 도구 경로" />
+            <Border Classes="card" Margin="0,8,0,0">
+                <StackPanel>
+                    <TextBlock Text="ffmpeg" FontSize="14" FontWeight="SemiBold" />
+                    <Grid Margin="0,7,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Classes="form" Text="{Binding FfmpegPath}"
+                                 AutomationProperties.Name="ffmpeg 경로"
+                                 Watermark="비워 두면 자동으로 찾습니다" />
+                        <Button Grid.Column="1" Classes="ghost" Content="찾아보기" Margin="8,0,0,0"
+                                Padding="16,8" Click="BrowseFfmpeg_Click" />
+                    </Grid>
+                    <TextBlock Classes="muted" FontSize="13" Margin="0,7,0,0" TextWrapping="Wrap"
+                               Text="{Binding FfmpegStatus}" />
+
+                    <TextBlock Text="yt-dlp" FontSize="14" FontWeight="SemiBold" Margin="0,20,0,0" />
+                    <Grid Margin="0,7,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Classes="form" Text="{Binding YtDlpPath}"
+                                 AutomationProperties.Name="yt-dlp 경로"
+                                 Watermark="비워 두면 앱 폴더 → PATH 순서로 찾습니다" />
+                        <Button Grid.Column="1" Classes="ghost" Content="찾아보기" Margin="8,0,0,0"
+                                Padding="16,8" Click="BrowseYtDlp_Click" />
+                    </Grid>
+                    <TextBlock Classes="muted" FontSize="13" Margin="0,7,0,0" TextWrapping="Wrap"
+                               Text="{Binding YtDlpStatus}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- 저장 위치 -->
+        <StackPanel Grid.Row="4" Margin="0,16,0,0">
+            <TextBlock Classes="formlabel" Text="저장 위치" />
+            <Border Classes="card" Margin="0,8,0,0">
+                <Grid ColumnDefinitions="92,*" RowDefinitions="Auto,Auto,Auto">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" FontSize="13" Text="설정 파일" />
+                    <SelectableTextBlock Grid.Row="0" Grid.Column="1" FontSize="13"
+                                         Foreground="{DynamicResource Brush.TextSecondary}"
+                                         Text="{Binding ConfigFilePath}" TextWrapping="Wrap" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" FontSize="13" Margin="0,6,0,0" Text="데이터 폴더" />
+                    <SelectableTextBlock Grid.Row="1" Grid.Column="1" FontSize="13" Margin="0,6,0,0"
+                                         Foreground="{DynamicResource Brush.TextSecondary}"
+                                         Text="{Binding DataDirectory}" TextWrapping="Wrap" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" FontSize="13" Margin="0,6,0,0" Text="로그 파일" />
+                    <SelectableTextBlock Grid.Row="2" Grid.Column="1" FontSize="13" Margin="0,6,0,0"
+                                         Foreground="{DynamicResource Brush.TextSecondary}"
+                                         Text="{Binding LogFilePath}" TextWrapping="Wrap" />
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- 상태 + 버튼 -->
+        <StackPanel Grid.Row="5" Margin="0,16,0,0">
+            <TextBlock Classes="status" Classes.failed="{Binding IsFailed}" Classes.success="{Binding IsSuccess}"
+                       Text="{Binding StatusText}" FontSize="15" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                <Button Classes="primary" Content="저장" MinWidth="120" Padding="22,8" Click="Save_Click" />
+                <Button Classes="ghost" Content="닫기" Margin="10,0,0,0" Click="Close_Click" />
+            </StackPanel>
+        </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

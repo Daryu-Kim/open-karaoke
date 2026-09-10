@@ -1,3 +1,5 @@
+using OpenKaraoke.Core.Configuration;
+
 namespace OpenKaraoke.Core.Audio;
 
 /// <summary>
@@ -16,16 +18,17 @@ public static class FfmpegLocator
         "/home/linuxbrew/.linuxbrew/bin",
     ];
 
-    /// <summary>Environment variable that overrides the auto-detected ffmpeg location.</summary>
-    public const string OverrideVariable = "OPENKARAOKE_FFMPEG";
+    /// <summary>Environment variable that overrides the configured ffmpeg location.</summary>
+    public const string OverrideVariable = AppSettings.FfmpegPathEnvVar;
 
     /// <summary>
-    /// Resolves ffmpeg by checking the <see cref="OverrideVariable"/> environment variable,
-    /// a binary next to the application, the PATH, then the usual Linux install directories.
+    /// Resolves ffmpeg by checking the path configured in the 설정 screen (or the
+    /// <see cref="OverrideVariable"/> environment variable), a binary next to the application,
+    /// the PATH, then the usual Linux install directories.
     /// </summary>
     public static string Resolve()
         => Core.Platform.ExecutableLocator.Resolve(
-            Environment.GetEnvironmentVariable(OverrideVariable),
+            AppSettings.GetFfmpegPath(),
             "ffmpeg",
             LinuxSearchPaths);
 

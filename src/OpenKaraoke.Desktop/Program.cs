@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using OpenKaraoke.Desktop.Diagnostics;
 
 namespace OpenKaraoke.Desktop;
 
@@ -8,7 +9,19 @@ internal static class Program
     // Avalonia needs an STA thread on Windows for windowing/COM interop.
     [STAThread]
     public static void Main(string[] args)
-        => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    {
+        AppLog.Initialize();
+        try
+        {
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception ex)
+        {
+            // Nothing else is left to report the failure, so it must reach the log file.
+            AppLog.Write($"[FATAL] 시작 실패: {ex}");
+            throw;
+        }
+    }
 
     /// <summary>
     /// Entry point shared by the app and the headless UI tests so both always use the

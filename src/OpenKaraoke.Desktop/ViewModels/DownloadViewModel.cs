@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using OpenKaraoke.Core.Download;
 using OpenKaraoke.Core.Library;
 using OpenKaraoke.Core.Search;
+using OpenKaraoke.Desktop.Diagnostics;
 
 namespace OpenKaraoke.Desktop.ViewModels;
 
@@ -109,6 +110,7 @@ public partial class DownloadViewModel : ObservableObject
             if (!result.Success || result.OutputFilePath == null)
             {
                 StatusText = result.ErrorMessage ?? "다운로드에 실패했습니다.";
+                AppLog.Write($"[download] {VideoId} 실패: {result.ErrorMessage}");
                 Phase = DownloadPhase.Failed;
                 return;
             }
@@ -138,8 +140,9 @@ public partial class DownloadViewModel : ObservableObject
             StatusText = "다운로드를 취소했습니다.";
             Phase = DownloadPhase.Ready;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            AppLog.Write($"[download] {VideoId} 예외: {ex}");
             StatusText = "다운로드 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
             Phase = DownloadPhase.Failed;
         }
@@ -158,8 +161,9 @@ public partial class DownloadViewModel : ObservableObject
         {
             return new FileInfo(path).Length;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            AppLog.Write($"[download] 파일 크기 확인 실패({path}): {ex.Message}");
             return 0;
         }
     }

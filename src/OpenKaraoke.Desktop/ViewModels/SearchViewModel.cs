@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenKaraoke.Core.Search;
+using OpenKaraoke.Desktop.Diagnostics;
 
 namespace OpenKaraoke.Desktop.ViewModels;
 
@@ -20,7 +21,7 @@ public enum SearchUiState
 /// </summary>
 public partial class SearchViewModel : ObservableObject
 {
-    private readonly YoutubeSearchService _searchService;
+    private YoutubeSearchService _searchService;
 
     public ObservableCollection<SearchResultItemViewModel> Results { get; } = new();
 
@@ -54,6 +55,20 @@ public partial class SearchViewModel : ObservableObject
     public SearchViewModel(YoutubeSearchService searchService)
     {
         _searchService = searchService;
+    }
+
+    /// <summary>
+    /// Swaps in a service built from a freshly saved API key so the change applies without
+    /// a restart, dropping any results that were fetched with the previous key.
+    /// </summary>
+    public void RebindService(YoutubeSearchService searchService)
+    {
+        _searchService = searchService;
+        Results.Clear();
+        SelectedResult = null;
+        ResultSummary = null;
+        ErrorMessage = null;
+        State = SearchUiState.Idle;
     }
 
     [RelayCommand]
@@ -98,11 +113,13 @@ public partial class SearchViewModel : ObservableObject
         }
         catch (SearchException ex)
         {
+            AppLog.Write($"[search] \"{query}\" 실패: {ex.Message}");
             ErrorMessage = ex.Message;
             State = SearchUiState.Error;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            AppLog.Write($"[search] \"{query}\" 예외: {ex}");
             ErrorMessage = "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
             State = SearchUiState.Error;
         }

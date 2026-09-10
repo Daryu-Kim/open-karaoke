@@ -13,6 +13,7 @@ using OpenKaraoke.Core.Formatting;
 using OpenKaraoke.Core.Library;
 using OpenKaraoke.Core.Search;
 using OpenKaraoke.Core.Time;
+using OpenKaraoke.Desktop.Diagnostics;
 
 namespace OpenKaraoke.Desktop.ViewModels;
 
@@ -43,6 +44,9 @@ public partial class ShellViewModel : ObservableObject, IDisposable
 
     public event EventHandler? FullscreenRequested;
 
+    /// <summary>Raised when the header 설정 button is pressed; the window shows the dialog.</summary>
+    public event EventHandler? SettingsRequested;
+
     /// <summary>YouTube search sub-view model; the API key is read from local config.</summary>
     public SearchViewModel Search { get; }
 
@@ -55,8 +59,8 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     /// <summary>Directory where downloaded MR audio files are kept (data/songs).</summary>
     public string SongsDirectory { get; }
 
-    /// <summary>yt-dlp process wrapper used for MR downloads.</summary>
-    public IYtDlpRunner DownloadRunner { get; }
+    /// <summary>yt-dlp process wrapper used for MR downloads. Re-created when settings change.</summary>
+    public IYtDlpRunner DownloadRunner { get; private set; }
 
     /// <summary>Upcoming songs (대기곡). The currently playing song is not stored here.</summary>
     public ObservableCollection<QueueItemViewModel> Queue { get; } = new();
@@ -116,6 +120,20 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         return new YoutubeSearchService(http, apiKey ?? string.Empty, SystemClock.Instance);
     }
 
+    /// <summary>
+    /// Re-reads the values stored by the 설정 dialog. ffmpeg is resolved per playback and
+    /// yt-dlp per runner, so only the runner and the search service need rebuilding.
+    /// </summary>
+    public void ApplySettings()
+    {
+        Search.RebindService(CreateSearchService());
+        DownloadRunner = new YtDlpProcessRunner();
+        AppLog.Write(
+            $"[settings] 적용됨 (YouTube 키 {(string.IsNullOrWhiteSpace(AppSettings.GetYoutubeApiKey()) ? "없음" : "설정")}, "
+            + $"ffmpeg {(File.Exists(FfmpegLocator.Resolve()) ? "사용 가능" : "없음")}, "
+            + $"yt-dlp {(File.Exists(YtDlpProcessRunner.ResolveExecutable(null)) ? "사용 가능" : "없음")})");
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSearchMode))]
     private bool _isLibraryMode = true;
@@ -127,6 +145,10 @@ public partial class ShellViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void ShowSearch() => IsLibraryMode = false;
+
+    /// <summary>Requests the 설정 dialog; the view owns the window.</summary>
+    [RelayCommand]
+    private void OpenSettings() => SettingsRequested?.Invoke(this, EventArgs.Empty);
 
     [ObservableProperty]
     private bool _isFullScreen;
@@ -354,6 +376,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         bool opened = await _player.OpenAsync(song.LocalPath);
         if (!opened)
         {
+            AppLog.Write($"[play] {song.Title} 열기 실패: {_player.LastError ?? "이유 없음"} ({song.LocalPath})");
             NowPlayingTitle = "이 곡을 재생할 수 없습니다";
             NowPlayingSubtitle = BuildOpenFailureSubtitle(song);
             HasTrack = false;

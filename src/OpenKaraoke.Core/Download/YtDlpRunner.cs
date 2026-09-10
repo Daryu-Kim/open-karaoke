@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using OpenKaraoke.Core.Configuration;
 
 namespace OpenKaraoke.Core.Download;
 
@@ -44,8 +45,14 @@ public sealed class YtDlpProcessRunner : IYtDlpRunner
     /// <summary>Whether a usable yt-dlp executable could be located.</summary>
     public bool IsAvailable => _toolPresent;
 
+    /// <summary>
+    /// Resolves yt-dlp, falling back to the path configured in the 설정 screen when no
+    /// explicit path is given (searches the app base directory, then the PATH).
+    /// </summary>
     public static string ResolveExecutable(string? explicitPath)
-        => Core.Platform.ExecutableLocator.Resolve(explicitPath, "yt-dlp");
+        => Core.Platform.ExecutableLocator.Resolve(
+            explicitPath ?? AppSettings.GetYtDlpPath(),
+            "yt-dlp");
 
     public async Task<YtDlpDownloadResult> DownloadAudioAsync(
         string videoId,

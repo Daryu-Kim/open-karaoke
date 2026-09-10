@@ -18,6 +18,8 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            AppLog.WriteStartupInfo();
+            AppLog.AttachUiThreadHandler();
             desktop.MainWindow = new MainWindow();
         }
 

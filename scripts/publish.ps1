@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Builds a self-contained release bundle for OpenKaraoke.
 

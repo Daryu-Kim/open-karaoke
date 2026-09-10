@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using OpenKaraoke.Desktop.Diagnostics;
 using OpenKaraoke.Desktop.ViewModels;
 
 namespace OpenKaraoke.Desktop.Views;
@@ -24,6 +25,7 @@ public partial class MainWindow : Window
         _viewModel = new ShellViewModel();
         DataContext = _viewModel;
         _viewModel.FullscreenRequested += OnFullscreenRequested;
+        _viewModel.SettingsRequested += OnSettingsRequested;
         _viewModel.Search.DownloadRequested += OnDownloadRequested;
 
         AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel);
@@ -34,11 +36,40 @@ public partial class MainWindow : Window
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
         _viewModel.Search.DownloadRequested -= OnDownloadRequested;
+        _viewModel.SettingsRequested -= OnSettingsRequested;
         _viewModel.FullscreenRequested -= OnFullscreenRequested;
         _viewModel.Dispose();
     }
 
     private void OnFullscreenRequested(object? sender, EventArgs e) => ToggleFullScreen();
+
+    /// <summary>Opens the 모달 설정 dialog; saved values are re-applied without a restart.</summary>
+    private void OnSettingsRequested(object? sender, EventArgs e)
+    {
+        AppLog.Write("[settings] 설정 창을 엽니다");
+        _ = ShowSettingsDialogAsync();
+    }
+
+    private async Task ShowSettingsDialogAsync()
+    {
+        try
+        {
+            var settings = new SettingsViewModel(_viewModel.SongsDirectory);
+            var dialog = new SettingsDialog(settings);
+            await dialog.ShowDialog<bool>(this);
+
+            // Any close path (닫기 button or the window X) applies what was stored.
+            if (settings.Saved)
+            {
+                _viewModel.ApplySettings();
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write($"[settings] 창을 열지 못했습니다: {ex}");
+            await MessageDialog.InfoAsync(this, "오류", $"설정 창을 여는 중 오류가 발생했습니다.\n\n{ex.Message}");
+        }
+    }
 
     private async void MainWindow_Opened(object? sender, EventArgs e)
     {
@@ -49,6 +80,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
+            AppLog.Write($"[library] 초기화 실패: {ex}");
             await MessageDialog.InfoAsync(this, "오류", $"라이브러리를 여는 중 오류가 발생했습니다.\n\n{ex.Message}");
         }
     }

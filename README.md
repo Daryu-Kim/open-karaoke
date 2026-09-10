@@ -46,8 +46,8 @@ scripts/publish-linux.sh            # 결과: artifacts/linux-x64
 
 | 용도 | Windows | Linux | 없을 때 |
 | --- | --- | --- | --- |
-| yt-dlp (MR 다운로드) | 실행 파일 옆 `yt-dlp.exe` 또는 PATH | 실행 파일 옆 `yt-dlp` 또는 PATH | 검색은 되지만 다운로드가 실패합니다 |
-| ffmpeg (오디오 디코딩) | 재생에는 불필요 | **필수** | 재생이 실패합니다 |
+| yt-dlp (MR 다운로드) | 실행 파일 옆 `yt-dlp.exe`, PATH, ⚙ 설정에서 경로 지정 | 실행 파일 옆 `yt-dlp`, PATH, ⚙ 설정에서 경로 지정 | 검색은 되지만 다운로드가 실패합니다 |
+| ffmpeg (오디오 디코딩) | 재생에는 불필요 (설정에서 경로 지정 가능) | **필수** — PATH 또는 ⚙ 설정에서 경로 지정 | 재생이 실패합니다 |
 | 한글 폰트 | 기본 내장 | `fonts-noto-cjk` 권장 | 글자가 네모(□□)로 보입니다 |
 
 Ubuntu/Debian 설치 예:
@@ -63,20 +63,38 @@ sudo apt install -y libx11-6 libice6 libsm6 libfontconfig1 libgl1 libasound2
 
 ## 4. 설정
 
-- **YouTube Data API 키** (검색 기능에 필요)
-  - 환경 변수: `OPEN_KARAOKE_YOUTUBE_API_KEY`
-  - 또는 실행 파일 옆 `appsettings.local.json`:
-    ```json
-    { "Youtube": { "ApiKey": "발급받은_API_키" } }
-    ```
-- **ffmpeg 경로 강제 지정** (자동 탐색 실패 시): `OPENKARAOKE_FFMPEG=/opt/ffmpeg/bin/ffmpeg`
-- 자동 탐색 순서: 환경 변수 → 실행 파일 옆 → `PATH` → `/usr/bin`, `/usr/local/bin`, `/bin`, `/snap/bin`,
+앱 오른쪽 위 **⚙ 설정** 버튼에서 입력하고 **저장**하면 실행 파일 옆 `appsettings.local.json` 에 기록됩니다.
+FFmpeg·yt-dlp 경로는 다음 작업부터, API 키는 다음 검색부터 적용되므로 재실행이 필요 없습니다.
+
+- **YouTube Data API 키** (검색 기능에 필요) — Google Cloud Console에서 YouTube Data API v3 사용 설정 후 발급
+- **ffmpeg / yt-dlp 경로** — `찾아보기`로 선택하거나 직접 입력, **비워 두면 자동 탐색**
+- 자동 탐색 순서: 설정 값 → 실행 파일 옆 → `PATH` → `/usr/bin`, `/usr/local/bin`, `/bin`, `/snap/bin`,
   `/var/lib/flatpak/exports/bin`, `/home/linuxbrew/.linuxbrew/bin`
+- 환경 변수로도 지정할 수 있으며, **환경 변수 값이 설정 화면에 저장한 값보다 우선**합니다.
+
+  | 대상 | 환경 변수 |
+  | --- | --- |
+  | YouTube API 키 | `OPEN_KARAOKE_YOUTUBE_API_KEY` |
+  | ffmpeg | `OPENKARAOKE_FFMPEG` |
+  | yt-dlp | `OPENKARAOKE_YTDLP` |
+
+`appsettings.local.json` 직접 편집도 가능합니다(설정 화면은 나머지 항목을 그대로 유지합니다).
+
+```json
+{
+  "Youtube": { "ApiKey": "발급받은_API_키" },
+  "Tools": { "FfmpegPath": "/usr/bin/ffmpeg", "YtDlpPath": "/usr/local/bin/yt-dlp" }
+}
+```
+
+> 이 파일은 `.gitignore` 에 등록되어 있어 저장소에 올라가지 않습니다. API 키가 들어가므로 공유하지 마세요.
 
 ## 5. 데이터 위치 (실행 파일 기준)
 
+- `appsettings.local.json` — 설정 화면에서 저장한 API 키와 도구 경로 (선택)
 - `data/songs.db` — 곡 목록(제목/가수/TJ 번호/파일 경로)
 - `data/songs/` — 내려받은 MR 오디오 파일
+- `logs/app.log` — 실행 기록과 오류 내용 (2MB를 넘으면 `logs/app.log.1`로 한 번만 보관)
 
 > 리눅스 설치 폴더는 사용자 쓰기 권한이 있어야 합니다. `/opt` 같은 곳에 두면 `data` 폴더를 만들지 못해
 > 목록이 저장되지 않습니다. 예: `~/open-karaoke` 에 두는 것을 권장합니다.
@@ -95,11 +113,14 @@ sudo apt install -y libx11-6 libice6 libsm6 libfontconfig1 libgl1 libasound2
 | --- | --- |
 | 곡 제목 아래에 "ffmpeg를 찾을 수 없습니다" 등 실패 사유가 표시됨 | 리눅스에 ffmpeg 미설치 → `sudo apt install ffmpeg` 후 재실행 |
 | 다운로드 버튼에서 "yt-dlp가 없습니다" | 실행 파일 옆에 `yt-dlp`(Windows는 `yt-dlp.exe`)를 두거나 PATH에 설치 |
-| 검색 결과가 비어 있음 | YouTube API 키 미설정, 할당량 초과, 네트워크 오류 |
+| 검색 결과가 비어 있음 | YouTube API 키 미설정, 할당량 초과, 네트워크 오류 → ⚙ 설정에서 키 저장 |
+| 설정에서 저장했는데 적용되지 않음 | 환경 변수(`OPEN_KARAOKE_YOUTUBE_API_KEY`, `OPENKARAOKE_FFMPEG`, `OPENKARAOKE_YTDLP`)가 설정되어 있으면 그 값이 우선합니다 → 환경 변수 해제 후 재실행 |
+| 설정 화면의 `찾아보기`가 열리지 않음 | 일부 리눅스 세션에 파일 선택 포털이 없을 때 발생 → 경로를 직접 입력해 저장 |
 | 화면 글자가 네모(□□)로 보임 | 한글 폰트 미설치 → `sudo apt install fonts-noto-cjk` |
 | 소리가 나지 않음 | 시스템 기본 출력 장치 확인 (오디오는 항상 기본 장치로 출력됩니다) |
 | 리눅스에서 창이 뜨지 않음 | `libx11-6 libice6 libsm6 libfontconfig1 libgl1` 설치 여부 확인 (최소 설치 배포판에서 발생) |
 | 꺼졌다 켜면 목록이 사라짐 | `data` 폴더에 쓸 수 없는 위치 → 쓰기 가능한 폴더로 이동 |
+| 실행 중 오류가 나거나 갑자기 종료됨 | 실행 파일 옆 `logs/app.log`를 열어 마지막 줄의 오류 내용 확인 (시작 시 버전·OS·ffmpeg·yt-dlp·API 키 상태가 함께 기록됩니다) |
 
 ## 8. 라이선스
 
