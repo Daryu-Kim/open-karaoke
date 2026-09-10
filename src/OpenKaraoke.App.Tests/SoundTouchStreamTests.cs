@@ -96,10 +96,55 @@ public class SoundTouchStreamTests
         Assert.True(ReadOnce(provider) > 0);
     }
 
-    private static List<float> DrainFloats(IWaveProvider provider)
+    [Fact]
+    public void TempoNormal_StereoStream_PreservesLengthAndChannels()
+    {
+        var (stream, totalFrames) = StereoStream(1.0);
+
+        using var provider = new SoundTouchStream(stream);
+        Assert.Equal(2, provider.WaveFormat.Channels);
+
+        var output = DrainFloats(provider);
+
+        // Interleaved output; frame count must survive the SoundTouch round trip.
+        Assert.InRange(output.Count, (int)(totalFrames * 2 * 0.85), (int)(totalFrames * 2 * 1.15));
+
+        double leftRms = ChannelRms(output, 2, 0);
+        double rightRms = ChannelRms(output, 2, 1);
+        Assert.InRange(leftRms, 0.25, 0.45);   // 440 Hz @ 0.5 amplitude
+        Assert.InRange(rightRms, 0.12, 0.24);  // 880 Hz @ 0.25 amplitude
+    }
+
+    [Fact]
+    public void StereoStream_LargeDeviceBuffer_DoesNotThrow()
+    {
+        // 35280 bytes is what WaveOutEvent asks for with its default 100 ms latency.
+        var (stream, totalFrames) = StereoStream(1.0);
+
+        using var provider = new SoundTouchStream(stream);
+
+        var output = DrainFloats(provider, 35280);
+
+        Assert.InRange(output.Count, (int)(totalFrames * 2 * 0.85), (int)(totalFrames * 2 * 1.15));
+    }
+
+    private static double ChannelRms(List<float> interleaved, int channels, int channel)
+    {
+        double sum = 0;
+        int count = 0;
+        for (int i = channel; i < interleaved.Count; i += channels)
+        {
+            sum += interleaved[i] * interleaved[i];
+            count++;
+        }
+
+        return count == 0 ? 0 : Math.Sqrt(sum / count);
+    }
+
+    private static List<float> DrainFloats(IWaveProvider provider, int bufferSize = 8192)
     {
         var output = new List<float>(SampleRate);
-        var buffer = new byte[8192];
+        var buffer = new byte[bufferSize];
         while (true)
         {
             int read = provider.Read(buffer, 0, buffer.Length);
@@ -133,6 +178,19 @@ public class SoundTouchStreamTests
         }
 
         return (new MemoryFloatWaveStream(samples, SampleRate, 1), totalFrames);
+    }
+
+    private static (MemoryFloatWaveStream Stream, int TotalFrames) StereoStream(double seconds)
+    {
+        int totalFrames = (int)(SampleRate * seconds);
+        var samples = new float[totalFrames * 2];
+        for (int i = 0; i < totalFrames; i++)
+        {
+            samples[i * 2] = (float)Math.Sin(2.0 * Math.PI * 440.0 * i / SampleRate) * 0.5f;
+            samples[i * 2 + 1] = (float)Math.Sin(2.0 * Math.PI * 880.0 * i / SampleRate) * 0.25f;
+        }
+
+        return (new MemoryFloatWaveStream(samples, SampleRate, 2), totalFrames);
     }
 
     /// <summary>In-memory IEEE-float <see cref="WaveStream"/> for offline tests.</summary>

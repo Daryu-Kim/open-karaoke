@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenKaraoke.App", "src\Open
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenKaraoke.App.Tests", "src\OpenKaraoke.App.Tests\OpenKaraoke.App.Tests.csproj", "{164EF4BA-195B-4F88-8871-996733F832ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenKaraoke.Desktop", "src\OpenKaraoke.Desktop\OpenKaraoke.Desktop.csproj", "{F3B2C67E-5569-44FA-AC68-4B0E5B53217A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,10 +34,15 @@ Global
 		{164EF4BA-195B-4F88-8871-996733F832ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{164EF4BA-195B-4F88-8871-996733F832ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{164EF4BA-195B-4F88-8871-996733F832ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3B2C67E-5569-44FA-AC68-4B0E5B53217A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3B2C67E-5569-44FA-AC68-4B0E5B53217A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3B2C67E-5569-44FA-AC68-4B0E5B53217A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3B2C67E-5569-44FA-AC68-4B0E5B53217A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{80AAB608-4E6B-4B42-938F-0C6A8EF6284F} = {2CB04467-4CF2-4D1C-BF56-6CF62735B9D8}
 		{FC7AF621-09D3-4EE4-821E-3F94D074ADF2} = {2CB04467-4CF2-4D1C-BF56-6CF62735B9D8}
 		{164EF4BA-195B-4F88-8871-996733F832ED} = {2CB04467-4CF2-4D1C-BF56-6CF62735B9D8}
+		{F3B2C67E-5569-44FA-AC68-4B0E5B53217A} = {2CB04467-4CF2-4D1C-BF56-6CF62735B9D8}
 	EndGlobalSection
 EndGlobal

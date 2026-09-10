@@ -1,0 +1,6 @@
+# Shell scripts and .desktop entries must use LF endings, otherwise the
+# shebang line breaks on Linux (e.g. "/usr/bin/env: 'sh\r'") and the
+# desktop entry parser sees stray carriage returns.
+*.sh text eol=lf
+*.desktop text eol=lf
+*.desktop.in text eol=lf

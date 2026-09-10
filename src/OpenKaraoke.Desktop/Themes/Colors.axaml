@@ -1,0 +1,41 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ── TJ 노래방 A-시리즈풍 팔레트 (다크 네이비 + 마젠타/퍼플/시안) ── -->
+    <Color x:Key="Color.Bg">#FF0A0E1A</Color>
+    <Color x:Key="Color.Surface">#FF121A30</Color>
+    <Color x:Key="Color.SurfaceAlt">#FF1A2442</Color>
+    <Color x:Key="Color.Border">#FF273157</Color>
+    <Color x:Key="Color.TextPrimary">#FFFFFFFF</Color>
+    <Color x:Key="Color.TextSecondary">#FF98A1C4</Color>
+    <Color x:Key="Color.TextDim">#FF5D6688</Color>
+    <Color x:Key="Color.AccentMagenta">#FFFF2E9A</Color>
+    <Color x:Key="Color.AccentPurple">#FF8A3BFF</Color>
+    <Color x:Key="Color.AccentCyan">#FF22E0FF</Color>
+    <Color x:Key="Color.Success">#FF2BD97C</Color>
+    <Color x:Key="Color.Danger">#FFFF4D5E</Color>
+
+    <SolidColorBrush x:Key="Brush.Bg" Color="{StaticResource Color.Bg}" />
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}" />
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="{StaticResource Color.SurfaceAlt}" />
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
+    <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource Color.TextPrimary}" />
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource Color.TextSecondary}" />
+    <SolidColorBrush x:Key="Brush.TextDim" Color="{StaticResource Color.TextDim}" />
+    <SolidColorBrush x:Key="Brush.AccentMagenta" Color="{StaticResource Color.AccentMagenta}" />
+    <SolidColorBrush x:Key="Brush.AccentPurple" Color="{StaticResource Color.AccentPurple}" />
+    <SolidColorBrush x:Key="Brush.AccentCyan" Color="{StaticResource Color.AccentCyan}" />
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}" />
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
+
+    <LinearGradientBrush x:Key="Brush.AccentGradient" StartPoint="0%,50%" EndPoint="100%,50%">
+        <GradientStop Color="{StaticResource Color.AccentMagenta}" Offset="0" />
+        <GradientStop Color="{StaticResource Color.AccentPurple}" Offset="0.55" />
+        <GradientStop Color="{StaticResource Color.AccentCyan}" Offset="1" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="Brush.AccentGradientVertical" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="{StaticResource Color.AccentMagenta}" Offset="0" />
+        <GradientStop Color="{StaticResource Color.AccentPurple}" Offset="1" />
+    </LinearGradientBrush>
+</ResourceDictionary>

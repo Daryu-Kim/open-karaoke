@@ -8,10 +8,10 @@ namespace OpenKaraoke.Core.Audio;
 /// </summary>
 public sealed class KaraokeAudioPlayer : IKaraokePlayer
 {
-    public const int MinKeySemitones = -6;
-    public const int MaxKeySemitones = 6;
-    public const double MinTempo = 0.8;
-    public const double MaxTempo = 1.2;
+    public const int MinKeySemitones = AudioRanges.MinKeySemitones;
+    public const int MaxKeySemitones = AudioRanges.MaxKeySemitones;
+    public const double MinTempo = AudioRanges.MinTempo;
+    public const double MaxTempo = AudioRanges.MaxTempo;
 
     private readonly object _gate = new();
     private MediaFoundationReader? _reader;
@@ -25,6 +25,9 @@ public sealed class KaraokeAudioPlayer : IKaraokePlayer
     public event EventHandler? PlaybackEnded;
 
     public bool IsOpen => _reader != null;
+
+    /// <summary>Windows decoding reports failures through <see cref="OpenAsync"/> only.</summary>
+    public string? LastError => null;
 
     public PlayerState State { get; private set; } = PlayerState.Stopped;
 

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=오픈 노래방
+Name[en]=Open Karaoke
+GenericName=노래방
+Comment=TJ 스타일 MR 반주 재생과 키/템포 조절
+Comment[en]=TJ-style karaoke player with key/tempo control
+Exec="@APP_DIR@/OpenKaraoke"
+Path=@APP_DIR@
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+Keywords=karaoke;노래방;MR;반주;
+StartupNotify=true

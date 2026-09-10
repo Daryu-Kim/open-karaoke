@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OpenKaraoke.Desktop.Views.MessageDialog"
+        Width="560"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Background="{DynamicResource Brush.Bg}"
+        Foreground="{DynamicResource Brush.TextPrimary}"
+        FontFamily="Malgun Gothic, Noto Sans CJK KR, Noto Sans KR, sans-serif"
+        Title="확인">
+    <Border Padding="28,24">
+        <StackPanel Spacing="18">
+            <TextBlock x:Name="TitleText" FontSize="22" FontWeight="Bold" TextWrapping="Wrap" />
+            <TextBlock x:Name="MessageText" FontSize="16" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Brush.TextSecondary}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button x:Name="CancelButton" Classes="ghost" Content="취소" MinWidth="110"
+                        IsVisible="False" Click="OnCancelClicked" />
+                <Button x:Name="ConfirmButton" Classes="primary" Content="확인" MinWidth="110"
+                        Click="OnConfirmClicked" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

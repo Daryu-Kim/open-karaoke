@@ -11,6 +11,12 @@ public interface IKaraokePlayer : IDisposable
     /// <summary>True when a track has been opened and is ready to play.</summary>
     bool IsOpen { get; }
 
+    /// <summary>
+    /// Korean description of the last failure (missing helper binary, unreadable file, no audio
+    /// device), or null when the last operation succeeded.
+    /// </summary>
+    string? LastError { get; }
+
     PlayerState State { get; }
 
     /// <summary>Total length of the opened track.</summary>

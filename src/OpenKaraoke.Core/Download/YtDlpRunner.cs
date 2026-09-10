@@ -25,7 +25,7 @@ public interface IYtDlpRunner
         CancellationToken cancellationToken);
 }
 
-/// <summary>Default implementation that shells out to yt-dlp.exe.</summary>
+/// <summary>Default implementation that shells out to the yt-dlp executable.</summary>
 public sealed class YtDlpProcessRunner : IYtDlpRunner
 {
     private readonly string _ytDlpPath;
@@ -45,21 +45,7 @@ public sealed class YtDlpProcessRunner : IYtDlpRunner
     public bool IsAvailable => _toolPresent;
 
     public static string ResolveExecutable(string? explicitPath)
-    {
-        if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath))
-        {
-            return explicitPath;
-        }
-
-        string nextToApp = Path.Combine(AppContext.BaseDirectory, "yt-dlp.exe");
-        if (File.Exists(nextToApp))
-        {
-            return nextToApp;
-        }
-
-        string? fromPath = FindOnPath("yt-dlp.exe");
-        return fromPath ?? nextToApp;
-    }
+        => Core.Platform.ExecutableLocator.Resolve(explicitPath, "yt-dlp");
 
     public async Task<YtDlpDownloadResult> DownloadAudioAsync(
         string videoId,
@@ -191,32 +177,5 @@ public sealed class YtDlpProcessRunner : IYtDlpRunner
 
             tracker?.ProcessLine(line);
         }
-    }
-
-    private static string? FindOnPath(string fileName)
-    {
-        string? pathEnv = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrWhiteSpace(pathEnv))
-        {
-            return null;
-        }
-
-        foreach (string dir in pathEnv.Split(Path.PathSeparator))
-        {
-            try
-            {
-                string candidate = Path.Combine(dir.Trim(), fileName);
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-            catch (Exception)
-            {
-                // Unreadable PATH entry; keep scanning.
-            }
-        }
-
-        return null;
     }
 }

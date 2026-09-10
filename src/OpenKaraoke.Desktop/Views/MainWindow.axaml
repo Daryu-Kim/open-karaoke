@@ -1,0 +1,564 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OpenKaraoke.Desktop.Views.MainWindow"
+        Title="Open Karaoke — 노래방"
+        Width="1600" Height="900"
+        MinWidth="1280" MinHeight="760"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource Brush.Bg}"
+        Foreground="{DynamicResource Brush.TextPrimary}"
+        FontFamily="Malgun Gothic, Noto Sans CJK KR, Noto Sans KR, sans-serif">
+
+    <Window.Resources>
+        <!-- 아이콘: 리눅스에는 Segoe MDL2 폰트가 없으므로 벡터 Path로 그린다. -->
+        <StreamGeometry x:Key="IconDownload">M12,3 L12,15 M12,15 L7,10 M12,15 L17,10 M4,17 L4,20 L20,20 L20,17</StreamGeometry>
+        <StreamGeometry x:Key="IconPlus">M12,5 L12,19 M5,12 L19,12</StreamGeometry>
+        <StreamGeometry x:Key="IconSearch">M10.5,4 A6.5,6.5 0 1 1 10.5,17 A6.5,6.5 0 1 1 10.5,4 Z M15.4,15.4 L20,20</StreamGeometry>
+        <StreamGeometry x:Key="IconFullscreen">M4,9 L4,4 L9,4 M15,4 L20,4 L20,9 M20,15 L20,20 L15,20 M9,20 L4,20 L4,15</StreamGeometry>
+        <StreamGeometry x:Key="IconGearSpokes">M11,1 L11,4 M11,18 L11,21 M1,11 L4,11 M18,11 L21,11 M3.9,3.9 L6,6 M16,16 L18.1,18.1 M18.1,3.9 L16,6 M6,16 L3.9,18.1</StreamGeometry>
+        <StreamGeometry x:Key="IconVolumeBody">M4,9 L8,9 L13,4.5 L13,19.5 L8,15 L4,15 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconVolumeWaves">M16,8.5 A4.5,4.5 0 0 1 16,15.5 M18.5,5.5 A8,8 0 0 1 18.5,18.5</StreamGeometry>
+    </Window.Resources>
+
+    <Grid Margin="24,0,24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══════════ 상단 헤더 ═══════════ -->
+        <Grid Grid.Row="0" Height="96">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 로고 -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="52" Height="52" CornerRadius="16"
+                        Background="{DynamicResource Brush.AccentGradient}">
+                    <TextBlock Text="♪" FontSize="30" FontWeight="Bold" Foreground="White"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="노래방" FontSize="28" FontWeight="Bold" />
+                    <TextBlock Text="OPEN KARAOKE" FontSize="12" Foreground="{DynamicResource Brush.TextSecondary}" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- 검색 영역 -->
+            <Grid Grid.Column="1" Margin="36,0,36,0" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Classes="ghost" IsEnabled="False"
+                            ToolTip.Tip="자모(초성) 검색 — 검색 기능 단계에서 활성화됩니다"
+                            Content="자모" />
+                    <Button Classes="ghost" IsEnabled="False" Margin="6,0,0,0"
+                            ToolTip.Tip="TJ 번호 검색 — 검색 기능 단계에서 활성화됩니다"
+                            Content="TJ 번호" />
+                </StackPanel>
+
+                <TextBox Grid.Column="1" Classes="search" Margin="12,0,12,0"
+                         Watermark="노래 제목, 가수명 또는 TJ 번호를 입력하세요"
+                         Text="{Binding Search.QueryText}"
+                         KeyDown="SearchTextBox_KeyDown"
+                         VerticalAlignment="Center" />
+
+                <Button Grid.Column="2" Classes="primary"
+                        Command="{Binding Search.SearchCommand}" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource IconSearch}" Width="18" Height="18" Stretch="Uniform"
+                              Stroke="{DynamicResource Brush.TextPrimary}" StrokeThickness="2"
+                              StrokeLineCap="Round" Margin="0,0,10,0" />
+                        <TextBlock Text="검색" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- 오른쪽 버튼 -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Classes="icon" ToolTip.Tip="설정" IsEnabled="False">
+                    <Grid Width="22" Height="22">
+                        <Ellipse Width="13" Height="13" Stroke="{DynamicResource Brush.TextPrimary}"
+                                 StrokeThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Path Data="{StaticResource IconGearSpokes}" Stroke="{DynamicResource Brush.TextPrimary}"
+                              StrokeThickness="2" StrokeLineCap="Round" />
+                    </Grid>
+                </Button>
+                <Button Classes="icon" Margin="10,0,0,0"
+                        ToolTip.Tip="전체화면 (F)" Command="{Binding ToggleFullscreenCommand}">
+                    <Path Data="{StaticResource IconFullscreen}" Width="22" Height="22" Stretch="Uniform"
+                          Stroke="{DynamicResource Brush.TextPrimary}" StrokeThickness="2"
+                          StrokeLineCap="Round" StrokeJoin="Round" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══════════ 본문 ═══════════ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="400" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 좌측: 검색 결과 / 라이브러리 영역 -->
+            <Border Grid.Column="0" Classes="card" Margin="0,0,18,0">
+                <Grid Margin="24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 영역 탭 (모드 전환) -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <Button Classes="chip" Classes.active="{Binding IsLibraryMode}" Content="내 라이브러리"
+                                Command="{Binding ShowLibraryCommand}" />
+                        <Button Classes="chip" Classes.active="{Binding IsSearchMode}" Content="노래 찾기"
+                                Margin="8,0,0,0" Command="{Binding ShowSearchCommand}" />
+                    </StackPanel>
+
+                    <!-- 콘텐츠 영역 (모드에 따라 전환) -->
+                    <Grid Grid.Row="1" Margin="0,14,0,0">
+
+                        <!-- 노래 찾기 (검색) -->
+                        <Grid DataContext="{Binding Search}"
+                              IsVisible="{Binding $parent[Window].DataContext.IsSearchMode}">
+
+                            <!-- 1) 초기 안내 -->
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        IsVisible="{Binding IsIdle}">
+                                <TextBlock Text="🎤" FontSize="72" HorizontalAlignment="Center" />
+                                <TextBlock Text="곡을 검색하거나 라이브러리에서 선택하세요" FontSize="26" FontWeight="Bold"
+                                           HorizontalAlignment="Center" Margin="0,18,0,0" />
+                                <TextBlock Text="위 검색창에 노래 제목이나 가수명을 입력해 주세요"
+                                           Classes="muted" FontSize="17" HorizontalAlignment="Center"
+                                           Margin="0,10,0,0" />
+                            </StackPanel>
+
+                            <!-- 2) 검색 중 -->
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        IsVisible="{Binding IsSearching}">
+                                <TextBlock Text="검색 중..." FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" />
+                                <TextBlock Text="유튜브에서 MR 영상을 찾고 있습니다" Classes="muted"
+                                           FontSize="17" HorizontalAlignment="Center" Margin="0,12,0,0" />
+                            </StackPanel>
+
+                            <!-- 3) 검색 결과 -->
+                            <Grid IsVisible="{Binding HasResults}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="{Binding ResultSummary}" Classes="muted" FontSize="16" />
+                                <ListBox Grid.Row="1" Margin="0,14,0,0"
+                                         ItemsSource="{Binding Results}"
+                                         SelectedItem="{Binding SelectedResult}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="150" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Border Grid.Column="0" Width="150" Height="84" CornerRadius="10"
+                                                        Background="{DynamicResource Brush.SurfaceAlt}" ClipToBounds="True"
+                                                        HorizontalAlignment="Left">
+                                                    <Image Source="{Binding ThumbnailUrl}" Stretch="UniformToFill" />
+                                                </Border>
+
+                                                <StackPanel Grid.Column="1" Margin="18,0,12,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding ChannelTitle}" Classes="muted"
+                                                               FontSize="15" Margin="0,7,0,0" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+
+                                                <Border Grid.Column="2" Background="{DynamicResource Brush.SurfaceAlt}"
+                                                        CornerRadius="8" Padding="12,6" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DurationText}" FontSize="15" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource Brush.AccentCyan}" />
+                                                </Border>
+
+                                                <Button Grid.Column="3" Classes="primary" Margin="16,0,0,0"
+                                                        VerticalAlignment="Center" Padding="16,7"
+                                                        Command="{Binding $parent[Window].DataContext.Search.DownloadCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip.Tip="이 곡을 로컬 라이브러리에 다운로드합니다">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Path Data="{StaticResource IconDownload}" Width="16" Height="16"
+                                                              Stretch="Uniform" Stroke="{DynamicResource Brush.TextPrimary}"
+                                                              StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"
+                                                              Margin="0,0,8,0" />
+                                                        <TextBlock Text="다운로드" FontSize="15" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+
+                            <!-- 4) 결과 없음 -->
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        IsVisible="{Binding IsEmptyResult}">
+                                <TextBlock Text="🔍" FontSize="72" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding ResultSummary}" FontSize="24" FontWeight="Bold"
+                                           HorizontalAlignment="Center" Margin="0,18,0,0"
+                                           TextWrapping="Wrap" MaxWidth="520" TextAlignment="Center" />
+                                <TextBlock Text="다른 검색어로 다시 시도해 주세요" Classes="muted"
+                                           FontSize="17" HorizontalAlignment="Center" Margin="0,10,0,0" />
+                            </StackPanel>
+
+                            <!-- 5) 오류 -->
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        IsVisible="{Binding HasError}">
+                                <TextBlock Text="⚠" FontSize="72" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding ErrorMessage}" FontSize="24" FontWeight="Bold"
+                                           HorizontalAlignment="Center" Margin="0,18,0,0"
+                                           TextWrapping="Wrap" MaxWidth="560" TextAlignment="Center" />
+                                <TextBlock Text="검색어를 확인하거나 잠시 후 다시 시도해 주세요" Classes="muted"
+                                           FontSize="17" HorizontalAlignment="Center" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 내 라이브러리 -->
+                        <Grid DataContext="{Binding Library}"
+                              IsVisible="{Binding $parent[Window].DataContext.IsLibraryMode}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- 상단: 제목 + 개수 + 필터 -->
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="내 라이브러리" Classes="section" />
+                                    <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="12"
+                                            Padding="11,3" Margin="12,0,0,0">
+                                        <TextBlock Text="{Binding CountText}" FontSize="17" FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.AccentCyan}" />
+                                    </Border>
+                                </StackPanel>
+
+                                <TextBox Grid.Column="1" Classes="filter" Width="300"
+                                         Text="{Binding FilterText}"
+                                         ToolTip.Tip="제목 · 가수 · TJ 번호로 필터링" />
+                            </Grid>
+
+                            <!-- 곡 목록 -->
+                            <Grid Grid.Row="1" Margin="0,18,0,0">
+
+                                <!-- 빈 상태 -->
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            IsVisible="{Binding !HasSongs}">
+                                    <TextBlock Text="♫" FontSize="58" HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TextDim}" />
+                                    <TextBlock Text="아직 저장된 곡이 없습니다" FontSize="24" FontWeight="Bold"
+                                               HorizontalAlignment="Center" Margin="0,16,0,0" />
+                                    <TextBlock Text="노래 찾기에서 원하는 MR 영상을 다운로드하면 여기에 쌓입니다"
+                                               Classes="muted" FontSize="16"
+                                               HorizontalAlignment="Center" Margin="0,10,0,0" />
+                                </StackPanel>
+
+                                <!-- 곡 리스트 -->
+                                <ListBox ItemsSource="{Binding Songs}"
+                                         IsVisible="{Binding HasSongs}"
+                                         DoubleTapped="LibrarySongsList_DoubleTapped">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- TJ 번호 칩 -->
+                                                <Border Grid.Column="0" Background="{DynamicResource Brush.AccentMagenta}"
+                                                        CornerRadius="8" Padding="11,4" Margin="0,0,14,0"
+                                                        VerticalAlignment="Center" IsVisible="{Binding HasTjNumber}">
+                                                    <TextBlock Text="{Binding TjDisplay}" FontSize="16" FontWeight="Bold"
+                                                               Foreground="White" />
+                                                </Border>
+
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Artist}" Classes="muted"
+                                                               FontSize="15" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Classes="ghost" Margin="0,0,12,0" Padding="14,6" FontSize="14"
+                                                            VerticalAlignment="Center"
+                                                            Command="{Binding $parent[Window].DataContext.EnqueueSongCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="대기곡에 추가합니다. 재생 중이 아니면 바로 재생됩니다">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Path Data="{StaticResource IconPlus}" Width="15" Height="15"
+                                                                  Stretch="Uniform" Stroke="{DynamicResource Brush.TextPrimary}"
+                                                                  StrokeThickness="2.4" StrokeLineCap="Round"
+                                                                  Margin="0,0,7,0" />
+                                                            <TextBlock Text="예약" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="8"
+                                                            Padding="10,5" Margin="0,0,12,0" VerticalAlignment="Center"
+                                                            IsVisible="{Binding HasDuration}">
+                                                        <TextBlock Text="{Binding DurationText}" FontSize="14" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource Brush.AccentCyan}" />
+                                                    </Border>
+                                                    <Button Classes="ghost" Content="삭제" Padding="14,6" FontSize="14"
+                                                            VerticalAlignment="Center" Click="DeleteSong_Click" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- 우측: 대기곡 -->
+            <Border Grid.Column="1" Classes="card">
+                <Grid Margin="22">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="대기곡" Classes="section" />
+                            <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="12"
+                                    Padding="10,2" Margin="10,0,0,0">
+                                <TextBlock Text="{Binding QueueCountText}" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource Brush.AccentCyan}" />
+                            </Border>
+                        </StackPanel>
+                        <Button Grid.Column="1" Classes="ghost" Padding="10,5"
+                                FontSize="13" Content="전체 삭제" VerticalAlignment="Center"
+                                Command="{Binding ClearQueueCommand}" ToolTip.Tip="대기곡 전체 삭제" />
+                    </Grid>
+
+                    <!-- 대기곡 빈 상태 -->
+                    <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                IsVisible="{Binding HasNoQueueSongs}">
+                        <TextBlock Text="♫" FontSize="56" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource Brush.TextDim}" />
+                        <TextBlock Text="{Binding QueueStatusText}" Classes="muted" FontSize="19"
+                                   HorizontalAlignment="Center" Margin="0,14,0,0" />
+                        <TextBlock Text="내 라이브러리에서 곡을 선택하면 대기곡에 추가됩니다" FontSize="14"
+                                   Foreground="{DynamicResource Brush.TextDim}" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <!-- 대기곡 리스트 -->
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Queue}"
+                             IsVisible="{Binding HasQueueSongs}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}" FontSize="17" FontWeight="Bold"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock Text="{Binding Artist}" Classes="muted" FontSize="13"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <Border Background="{DynamicResource Brush.AccentMagenta}" CornerRadius="6"
+                                                    Padding="7,1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    IsVisible="{Binding HasTjNumber}">
+                                                <TextBlock Text="{Binding TjDisplay}" FontSize="11" FontWeight="Bold"
+                                                           Foreground="White" />
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <Button Grid.Column="1" Classes="ghost" Padding="9,4" FontSize="13"
+                                            VerticalAlignment="Center" Content="✕" ToolTip.Tip="대기곡에서 제거"
+                                            Command="{Binding $parent[Window].DataContext.RemoveQueueItemCommand}"
+                                            CommandParameter="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════ 하단 PlayerBar ═══════════ -->
+        <Border Grid.Row="2" Classes="card" Margin="0,18,0,0" Padding="22,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="400" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="430" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 좌측: 현재 곡 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="104" Height="104" CornerRadius="14"
+                            Background="{DynamicResource Brush.AccentGradient}">
+                        <TextBlock Text="♪" FontSize="44" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="NOW PLAYING" FontSize="12" FontWeight="Bold"
+                                   Foreground="{DynamicResource Brush.AccentCyan}" />
+                        <TextBlock Text="{Binding NowPlayingTitle}" FontSize="26" FontWeight="Bold"
+                                   MaxWidth="260" TextTrimming="CharacterEllipsis" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding NowPlayingSubtitle}" Classes="muted"
+                                   FontSize="15" Margin="0,4,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 중앙: 진행 + 컨트롤 -->
+                <Grid Grid.Column="1" Margin="24,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 진행 바 -->
+                    <Grid Grid.Row="0" Margin="0,6,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding CurrentTimeText}" Classes="muted"
+                                   FontSize="15" VerticalAlignment="Center" />
+                        <ProgressBar Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding ProgressFraction}"
+                                     Margin="16,0" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="muted"
+                                   FontSize="15" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- 컨트롤 버튼 -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                        <Button Classes="round" Command="{Binding PrevCommand}" ToolTip.Tip="이전 곡 (Shift+N)">
+                            <Grid Width="26" Height="26">
+                                <Path Data="M 8,4 L 12,4 L 12,28 L 8,28 Z M 26,8 L 15,16 L 26,24 Z"
+                                      Fill="{DynamicResource Brush.TextPrimary}" Stretch="Uniform" />
+                            </Grid>
+                        </Button>
+                        <Button Classes="play" Margin="18,0"
+                                IsEnabled="{Binding CanTogglePlay}"
+                                Command="{Binding TogglePlayCommand}"
+                                ToolTip.Tip="재생 / 일시정지 (Space)">
+                            <Grid Width="34" Height="34">
+                                <Path Data="M 8,2 L 8,30 L 28,16 Z" Fill="White" Stretch="Uniform"
+                                      IsVisible="{Binding IsPaused}" />
+                                <Path Data="M 6,3 L 13,3 L 13,29 L 6,29 Z M 19,3 L 26,3 L 26,29 L 19,29 Z"
+                                      Fill="White" Stretch="Uniform"
+                                      IsVisible="{Binding IsPlaying}" />
+                            </Grid>
+                        </Button>
+                        <Button Classes="round" Command="{Binding NextCommand}" ToolTip.Tip="다음 곡 (N)">
+                            <Grid Width="26" Height="26">
+                                <Path Data="M 20,4 L 24,4 L 24,28 L 20,28 Z M 6,8 L 17,16 L 6,24 Z"
+                                      Fill="{DynamicResource Brush.TextPrimary}" Stretch="Uniform" />
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 우측: 키 / 템포 / 볼륨 -->
+                <Grid Grid.Column="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- KEY -->
+                    <Border Grid.Column="0" Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="14"
+                            Padding="12,10" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <StackPanel>
+                            <TextBlock Text="KEY" FontSize="12" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.AccentMagenta}"
+                                       HorizontalAlignment="Center" />
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Classes="step"
+                                        Command="{Binding KeyDownCommand}"
+                                        ToolTip.Tip="키 내리기 (-)" Content="−" />
+                                <TextBlock Grid.Column="1" Text="{Binding KeyText}" FontSize="26" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Button Grid.Column="2" Classes="step"
+                                        Command="{Binding KeyUpCommand}"
+                                        ToolTip.Tip="키 올리기 (+)" Content="+" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- TEMPO -->
+                    <Border Grid.Column="1" Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="14"
+                            Padding="12,10" VerticalAlignment="Center">
+                        <StackPanel>
+                            <TextBlock Text="TEMPO" FontSize="12" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.AccentCyan}"
+                                       HorizontalAlignment="Center" />
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Classes="step"
+                                        Command="{Binding TempoDownCommand}"
+                                        ToolTip.Tip="템포 느리게 ([)" Content="−" />
+                                <TextBlock Grid.Column="1" Text="{Binding TempoPercentText}" FontSize="26" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Button Grid.Column="2" Classes="step"
+                                        Command="{Binding TempoUpCommand}"
+                                        ToolTip.Tip="템포 빠르게 (])" Content="+" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 볼륨 -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <Grid Width="24" Height="24" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconVolumeBody}" Fill="{DynamicResource Brush.TextPrimary}" />
+                            <Path Data="{StaticResource IconVolumeWaves}" Stroke="{DynamicResource Brush.TextPrimary}"
+                                  StrokeThickness="1.8" StrokeLineCap="Round" />
+                        </Grid>
+                        <TextBlock Text="80" Classes="muted" FontSize="18" Margin="8,0,0,0"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -177,9 +177,9 @@ public sealed class SoundTouchStream : IWaveProvider, IDisposable
 
     private int ReceiveFrames(float[] target, int maxFrames)
     {
-        int maxSamples = maxFrames * _channels;
-        var span = new Span<float>(target, 0, maxSamples);
-        int samples = _soundTouch.ReceiveSamples(span, maxSamples);
-        return samples / _channels;
+        // SoundTouch counts "samples" in frames: one sample holds every channel, and the
+        // target span must be able to hold maxFrames * channels interleaved floats.
+        var span = new Span<float>(target, 0, maxFrames * _channels);
+        return _soundTouch.ReceiveSamples(span, maxFrames);
     }
 }

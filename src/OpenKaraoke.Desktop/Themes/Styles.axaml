@@ -1,0 +1,316 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 기본 텍스트: 폰트는 플랫폼 기본(윈도우 Malgun Gothic / 리눅스 시스템 폰트)을 따른다. -->
+    <Style Selector="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+    </Style>
+
+    <!-- ── 패널 카드 ── -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+        <Setter Property="CornerRadius" Value="18" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- ══ 버튼 ══
+         Fluent 기본 템플릿은 파트 이름 기반 스타일과 충돌하므로 자체 템플릿(Border#Bd)을 쓴다.
+         상태별 색은 /template/ Border#Bd 규칙으로만 지정해 플랫폼 테마와 완전히 분리한다. -->
+    <Style Selector="Button">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="18,9" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusAdorner" Value="{x:Null}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Bd"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Name="ContentInner"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button:disabled /template/ Border#Bd">
+        <Setter Property="Opacity" Value="0.35" />
+    </Style>
+
+    <!-- 주 버튼: 그라데이션 배경 -->
+    <Style Selector="Button.primary">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Padding" Value="28,12" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.primary /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentGradient}" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentGradient}" />
+        <Setter Property="Opacity" Value="0.85" />
+    </Style>
+    <Style Selector="Button.primary:pressed /template/ Border#Bd">
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+
+    <!-- 고스트 버튼 -->
+    <Style Selector="Button.ghost">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+    <Style Selector="Button.ghost /template/ Border#Bd">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ Border#Bd">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentCyan}" />
+    </Style>
+    <Style Selector="Button.ghost:pressed /template/ Border#Bd">
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+
+    <!-- 아이콘 버튼(정사각) -->
+    <Style Selector="Button.icon">
+        <Setter Property="Width" Value="52" />
+        <Setter Property="Height" Value="52" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="14" />
+    </Style>
+    <Style Selector="Button.icon:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}" />
+    </Style>
+    <Style Selector="Button.icon:pressed /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+
+    <!-- 원형 컨트롤 버튼 -->
+    <Style Selector="Button.round">
+        <Setter Property="Width" Value="64" />
+        <Setter Property="Height" Value="64" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="32" />
+    </Style>
+    <Style Selector="Button.round:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}" />
+    </Style>
+    <Style Selector="Button.round:pressed /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+
+    <!-- 메인 재생 버튼 -->
+    <Style Selector="Button.play">
+        <Setter Property="Width" Value="84" />
+        <Setter Property="Height" Value="84" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="42" />
+    </Style>
+    <Style Selector="Button.play /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentGradientVertical}" />
+    </Style>
+    <Style Selector="Button.play:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentGradientVertical}" />
+        <Setter Property="Opacity" Value="0.85" />
+    </Style>
+    <Style Selector="Button.play:pressed /template/ Border#Bd">
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+
+    <!-- 키/템포 조절 버튼 -->
+    <Style Selector="Button.step">
+        <Setter Property="Width" Value="44" />
+        <Setter Property="Height" Value="44" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="Button.step:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentPurple}" />
+    </Style>
+    <Style Selector="Button.step:pressed /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentPurple}" />
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+
+    <!-- 모드 전환 칩 -->
+    <Style Selector="Button.chip">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="22,10" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+    <Style Selector="Button.chip /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+    </Style>
+    <Style Selector="Button.chip:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}" />
+    </Style>
+    <Style Selector="Button.chip.active">
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="Button.chip.active /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentGradient}" />
+    </Style>
+    <Style Selector="Button.chip.active:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentGradient}" />
+        <Setter Property="Opacity" Value="0.9" />
+    </Style>
+
+    <!-- 글자만 있는 보조 버튼 -->
+    <Style Selector="Button.link">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+    <Style Selector="Button.link /template/ Border#Bd">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.link:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Opacity" Value="0.8" />
+    </Style>
+
+    <!-- ── 입력창 (Fluent 기본 템플릿 유지: IME/캐럿/워터마크 그대로 사용) ── -->
+    <Style Selector="TextBox">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.AccentCyan}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource Brush.AccentPurple}" />
+        <Setter Property="SelectionForegroundBrush" Value="White" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="FocusAdorner" Value="{x:Null}" />
+    </Style>
+    <Style Selector="TextBox /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="CornerRadius" Value="12" />
+    </Style>
+    <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextDim}" />
+    </Style>
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentCyan}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="TextBox.search">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Watermark" Value="곡명 또는 가수를 입력하세요" />
+    </Style>
+
+    <Style Selector="TextBox.filter">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBox.form">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Padding" Value="12,9" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <!-- ── 리스트 아이템 (검색 결과 / 보관함 / 예약 목록 공용) ── -->
+    <Style Selector="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="ListBoxItem">
+        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusAdorner" Value="{x:Null}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="1"
+                        CornerRadius="14" Padding="14">
+                    <ContentPresenter Name="ContentInner"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="Stretch" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentCyan}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentCyan}" />
+    </Style>
+
+    <!-- ── 진행 바 ── -->
+    <Style Selector="ProgressBar">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="PART_Track" Height="12" CornerRadius="6"
+                        Background="{DynamicResource Brush.SurfaceAlt}">
+                    <Border Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="6"
+                            Background="{DynamicResource Brush.AccentGradient}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- ── 구분 헤더 ── -->
+    <Style Selector="TextBlock.section">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.muted">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+
+    <Style Selector="TextBlock.dim">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextDim}" />
+    </Style>
+
+    <Style Selector="TextBlock.formlabel">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+</Styles>

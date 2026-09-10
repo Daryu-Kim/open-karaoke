@@ -1,0 +1,21 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="OpenKaraoke.Desktop.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://OpenKaraoke/Themes/Colors.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Fluent 기본 컨트롤 색상 커스터마이즈 -->
+            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource Color.TextDim}" />
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://OpenKaraoke/Themes/Styles.axaml" />
+    </Application.Styles>
+</Application>

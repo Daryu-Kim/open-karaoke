@@ -6,8 +6,8 @@ namespace OpenKaraoke.Core.Download;
 /// </summary>
 public static class YtDlpErrors
 {
-    public const string ToolMissingMessage =
-        "yt-dlp가 없습니다. 앱 폴더나 PATH에 yt-dlp.exe를 설치한 후 다시 시도해 주세요.";
+    public static string ToolMissingMessage =>
+        $"yt-dlp가 없습니다. 앱 폴더나 PATH에 {Core.Platform.ExecutableLocator.WithPlatformSuffix("yt-dlp")}를 설치한 후 다시 시도해 주세요.";
 
     public const string TimeoutOrCancelledMessage = "다운로드가 중단되었습니다.";
 
