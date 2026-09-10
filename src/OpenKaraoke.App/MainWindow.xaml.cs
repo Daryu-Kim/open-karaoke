@@ -86,6 +86,16 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>Double-clicking a library row enqueues the song (예약).</summary>
+    private void LibrarySongsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (LibrarySongsList.SelectedItem is SongItemViewModel item
+            && _viewModel.EnqueueSongCommand.CanExecute(item))
+        {
+            _viewModel.EnqueueSongCommand.Execute(item);
+        }
+    }
+
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         bool typing = e.OriginalSource is TextBoxBase;

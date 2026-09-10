@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Net.Http;
@@ -57,6 +59,9 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     /// <summary>yt-dlp process wrapper used for MR downloads.</summary>
     public IYtDlpRunner DownloadRunner { get; }
 
+    /// <summary>Upcoming songs (대기곡). The currently playing song is not stored here.</summary>
+    public ObservableCollection<QueueItemViewModel> Queue { get; } = new();
+
     public ShellViewModel(
         ISongLibraryStore? songStore = null,
         IYtDlpRunner? downloadRunner = null,
@@ -74,6 +79,8 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         _ticker = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         _ticker.Tick += OnTickerTick;
         _ticker.Start();
+
+        Queue.CollectionChanged += OnQueueChanged;
 
         Search = new SearchViewModel(CreateSearchService());
         Library = new LibraryViewModel(SongStore);
@@ -140,13 +147,30 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _queueStatusText = "대기곡이 없습니다";
 
+    /// <summary>Queue size label on the 대기곡 panel header, e.g. "3곡".</summary>
+    [ObservableProperty]
+    private string _queueCountText = "0곡";
+
+    /// <summary>True when at least one song is waiting; toggles the queue list.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoQueueSongs))]
+    [NotifyPropertyChangedFor(nameof(CanTogglePlay))]
+    private bool _hasQueueSongs;
+
+    /// <summary>Inverse of HasQueueSongs; shows the empty-state panel.</summary>
+    public bool HasNoQueueSongs => !HasQueueSongs;
+
     /// <summary>True while the engine is actually producing sound.</summary>
     [ObservableProperty]
     private bool _isPlaying;
 
-    /// <summary>True when a track is opened and the play button can act.</summary>
+    /// <summary>True when a track is open and the play button can act.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanTogglePlay))]
     private bool _hasTrack;
+
+    /// <summary>Play button is enabled while a track is open or a song is queued.</summary>
+    public bool CanTogglePlay => HasTrack || HasQueueSongs;
 
     /// <summary>0..1 playback ratio driving the PlayerBar progress fill.</summary>
     [ObservableProperty]
@@ -203,35 +227,122 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void TempoUp() => Tempo += TempoStep;
 
-    /// <summary>Play/pause toggle; only acts while a track is open.</summary>
+    /// <summary>Play/pause toggle. With an open track it toggles playback; when idle it starts the first queued song.</summary>
     [RelayCommand]
-    private void TogglePlay()
+    private async Task TogglePlayAsync()
     {
-        if (!_player.IsOpen)
+        if (HasTrack && _player.IsOpen)
         {
+            if (_player.State == PlayerState.Playing)
+            {
+                _player.Pause();
+                IsPlaying = false;
+            }
+            else
+            {
+                IsPlaying = _player.Play();
+            }
+
             return;
         }
 
-        if (_player.State == PlayerState.Playing)
+        if (Queue.Count > 0)
         {
-            _player.Pause();
-            IsPlaying = false;
-        }
-        else
-        {
-            IsPlaying = _player.Play();
+            await StartNextQueuedAsync();
         }
     }
 
-    /// <summary>Opens a library song and starts playback; used by the row's 재생 button.</summary>
+    /// <summary>
+    /// Adds a song to the queue. When nothing is playing the song starts
+    /// immediately (예약형 model: 곡 선택 = 대기곡에 추가, 순서대로 자동 재생).
+    /// </summary>
     [RelayCommand]
-    private async Task PlaySongAsync(SongItemViewModel? song)
+    private void EnqueueSong(SongItemViewModel? song)
     {
         if (song is null)
         {
             return;
         }
 
+        if (!File.Exists(song.LocalPath))
+        {
+            NowPlayingTitle = "파일을 찾을 수 없습니다";
+            NowPlayingSubtitle = song.Title;
+            return;
+        }
+
+        if (_player.IsOpen && _player.State != PlayerState.Stopped)
+        {
+            Queue.Add(new QueueItemViewModel(song));
+        }
+        else
+        {
+            _ = PlayTrackAsync(song);
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveQueueItem(QueueItemViewModel? item)
+    {
+        if (item is not null)
+        {
+            Queue.Remove(item);
+        }
+    }
+
+    private bool CanClearQueue() => HasQueueSongs;
+
+    [RelayCommand(CanExecute = nameof(CanClearQueue))]
+    private void ClearQueue()
+    {
+        Queue.Clear();
+    }
+
+    private bool CanGoPrev() => HasTrack;
+
+    /// <summary>Restarts the current song from the beginning.</summary>
+    [RelayCommand(CanExecute = nameof(CanGoPrev))]
+    private void Prev()
+    {
+        if (_player.IsOpen)
+        {
+            _player.Seek(TimeSpan.Zero);
+        }
+    }
+
+    private bool CanSkip() => HasTrack || HasQueueSongs;
+
+    /// <summary>Skips to the next queued song; with an empty queue it stops playback.</summary>
+    [RelayCommand(CanExecute = nameof(CanSkip))]
+    private async Task NextAsync()
+    {
+        if (Queue.Count > 0)
+        {
+            await StartNextQueuedAsync();
+        }
+        else if (_player.IsOpen)
+        {
+            _player.Stop();
+            IsPlaying = false;
+        }
+    }
+
+    /// <summary>Pops the first queued song and plays it.</summary>
+    private async Task StartNextQueuedAsync()
+    {
+        if (Queue.Count == 0)
+        {
+            return;
+        }
+
+        var next = Queue[0];
+        Queue.RemoveAt(0);
+        await PlayTrackAsync(next.Song);
+    }
+
+    /// <summary>Opens a song and starts playback; also re-applies key/tempo.</summary>
+    private async Task PlayTrackAsync(SongItemViewModel song)
+    {
         bool opened = await _player.OpenAsync(song.LocalPath);
         if (!opened)
         {
@@ -311,17 +422,47 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>Natural end of the current song: start the next queued song or return to idle.</summary>
     private void OnTrackEnded()
     {
+        if (Queue.Count > 0)
+        {
+            _ = StartNextQueuedAsync();
+            return;
+        }
+
         IsPlaying = false;
+        HasTrack = false;
+        NowPlayingTitle = "재생할 곡을 선택하세요";
+        NowPlayingSubtitle = string.Empty;
         CurrentTimeText = MediaTimeFormatter.Format(TimeSpan.Zero);
         ProgressFraction = 0;
+    }
+
+    private void OnQueueChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        QueueCountText = $"{Queue.Count}곡";
+        HasQueueSongs = Queue.Count > 0;
+        QueueStatusText = Queue.Count > 0 ? "위에서부터 순서대로 재생됩니다" : "대기곡이 없습니다";
+    }
+
+    partial void OnHasTrackChanged(bool value)
+    {
+        PrevCommand.NotifyCanExecuteChanged();
+        NextCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnHasQueueSongsChanged(bool value)
+    {
+        NextCommand.NotifyCanExecuteChanged();
+        ClearQueueCommand.NotifyCanExecuteChanged();
     }
 
     public void Dispose()
     {
         _ticker.Stop();
         _ticker.Tick -= OnTickerTick;
+        Queue.CollectionChanged -= OnQueueChanged;
         _player.PlaybackEnded -= OnPlayerPlaybackEnded;
         if (_ownsPlayer)
         {
