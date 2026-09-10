@@ -30,7 +30,7 @@ dotnet publish "$project" \
     -p:DebugSymbols=false \
     -o "$out"
 
-cp "$repo_root/THIRD-PARTY-NOTICES.md" "$repo_root/README.md" "$out/"
+cp "$repo_root/THIRD-PARTY-NOTICES.md" "$repo_root/README.md" "$repo_root/LINUX.md" "$out/"
 cp "$repo_root/packaging/open-karaoke.desktop.in" "$repo_root/packaging/install-desktop-entry.sh" "$out/"
 chmod +x "$out/OpenKaraoke" "$out/install-desktop-entry.sh"
 
@@ -39,3 +39,4 @@ echo "배포 폴더: $out"
 echo "실행: \"$out/OpenKaraoke\""
 echo "앱 메뉴 등록(선택): \"$out/install-desktop-entry.sh\""
 echo "ffmpeg가 필요합니다(예: sudo apt install ffmpeg fonts-noto-cjk)"
+echo "자세한 설치·설정 절차: $out/LINUX.md"

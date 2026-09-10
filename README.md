@@ -39,8 +39,8 @@ pwsh scripts/publish.ps1 -Runtime linux-x64
 scripts/publish-linux.sh            # 결과: artifacts/linux-x64
 ```
 
-`artifacts/` 폴더는 git에 커밋되지 않습니다. 완료 후 실행 파일 옆에 `THIRD-PARTY-NOTICES.md`, `README.md`
-(리눅스는 `open-karaoke.desktop.in`, `install-desktop-entry.sh` 포함)가 함께 복사됩니다.
+`artifacts/` 폴더는 git에 커밋되지 않습니다. 완료 후 실행 파일 옆에 `THIRD-PARTY-NOTICES.md`, `README.md`,
+`LINUX.md`(리눅스는 `open-karaoke.desktop.in`, `install-desktop-entry.sh` 포함)가 함께 복사됩니다.
 
 ## 3. 실행에 필요한 외부 프로그램
 
@@ -106,6 +106,9 @@ FFmpeg·yt-dlp 경로는 다음 작업부터, API 키는 다음 검색부터 적
 3. 실행: `./OpenKaraoke` (첫 실행 시 `data` 폴더가 만들어집니다)
 4. 앱 메뉴에 등록하려면: `./install-desktop-entry.sh`
 5. TJ 믹서/스피커를 시스템 기본 출력 장치로 지정한 뒤 실행하세요.
+
+> 설치 파일 옮기는 방법, 오디오 설정, 자동 실행, 업데이트/제거까지 자세한 내용은
+> **[LINUX.md](LINUX.md) (리눅스 설치·운영 안내)** 를 참고하세요.
 
 ## 7. 문제 해결
 

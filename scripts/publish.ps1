@@ -4,9 +4,9 @@
 
 .DESCRIPTION
     Publishes the Avalonia desktop project for the requested runtime identifier and
-    copies the third-party notices plus (for linux-x64) the desktop-entry installer
-    into the output folder. The bundle is framework-independent, so the target PC
-    does not need a .NET runtime installed.
+    copies the documentation (README/LINUX guide/third-party notices) plus (for
+    linux-x64) the desktop-entry installer into the output folder. The bundle is
+    framework-independent, so the target PC does not need a .NET runtime installed.
 
 .EXAMPLE
     pwsh scripts/publish.ps1 -Runtime win-x64
@@ -72,10 +72,11 @@ if ($LASTEXITCODE -ne 0) {
     throw "dotnet publish 실패 (exit code $LASTEXITCODE)"
 }
 
-Write-Host '[2/2] Copying licensing and desktop files...' -ForegroundColor Cyan
+Write-Host '[2/2] Copying documentation and desktop files...' -ForegroundColor Cyan
 
 Copy-Item (Join-Path $repoRoot 'THIRD-PARTY-NOTICES.md') -Destination $OutputDirectory -Force
 Copy-Item (Join-Path $repoRoot 'README.md') -Destination $OutputDirectory -Force
+Copy-Item (Join-Path $repoRoot 'LINUX.md') -Destination $OutputDirectory -Force
 
 if ($Runtime -eq 'linux-x64') {
     Copy-Item (Join-Path $repoRoot 'packaging\open-karaoke.desktop.in') -Destination $OutputDirectory -Force
@@ -94,4 +95,5 @@ if ($Runtime -eq 'win-x64') {
     Write-Host '  ./OpenKaraoke                      # 실행'
     Write-Host '  ./install-desktop-entry.sh         # 앱 메뉴 등록(선택)'
     Write-Host 'ffmpeg가 설치되어 있어야 합니다: sudo apt install ffmpeg fonts-noto-cjk'
+    Write-Host '자세한 설치·설정 절차: LINUX.md 참고'
 }
