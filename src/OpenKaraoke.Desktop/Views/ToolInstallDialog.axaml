@@ -1,0 +1,128 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OpenKaraoke.Desktop.ViewModels"
+        x:Class="OpenKaraoke.Desktop.Views.ToolInstallDialog"
+        Title="필요한 도구 설치"
+        Width="720"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Brush.Bg}"
+        Foreground="{DynamicResource Brush.TextPrimary}"
+        FontFamily="Malgun Gothic, Noto Sans CJK KR, Noto Sans KR, sans-serif">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.status">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        </Style>
+        <Style Selector="TextBlock.status.failed">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Danger}" />
+        </Style>
+        <Style Selector="TextBlock.status.success">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Success}" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="18" />
+        </Style>
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.badge.mandatory">
+            <Setter Property="Background" Value="{DynamicResource Brush.AccentMagenta}" />
+        </Style>
+        <Style Selector="Border.badge > TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        </Style>
+        <Style Selector="Border.badge.mandatory > TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </Window.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="30,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 제목 -->
+            <StackPanel Grid.Row="0">
+                <TextBlock Text="필요한 도구 설치" FontSize="26" FontWeight="Bold" />
+                <TextBlock Classes="muted" FontSize="14" Margin="0,6,0,0" TextWrapping="Wrap"
+                           Text="노래 검색과 재생에 필요한 외부 도구를 이 PC에 자동으로 내려받아 설치합니다. 인터넷 연결이 필요하며 관리자 권한은 필요하지 않습니다. '선택'으로 표시된 도구는 직접 체크해 주세요." />
+                <TextBlock Classes="muted" FontSize="14" Margin="0,8,0,0" Text="{Binding Summary}" />
+            </StackPanel>
+
+            <!-- 환경 변수 안내 -->
+            <TextBlock Grid.Row="1" Text="{Binding EnvironmentNotice}" TextWrapping="Wrap" FontSize="13"
+                       Foreground="{DynamicResource Brush.AccentMagenta}" Margin="0,14,0,0"
+                       IsVisible="{Binding HasEnvironmentNotice}" />
+
+            <!-- 도구 목록 -->
+            <ItemsControl Grid.Row="2" Margin="0,16,0,0" ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:ToolRowViewModel">
+                        <Border Classes="card" Margin="0,0,0,12">
+                            <StackPanel>
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <TextBlock Text="{Binding DisplayName}" FontSize="15" FontWeight="SemiBold"
+                                               VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Classes="badge" Classes.mandatory="{Binding IsRequired}"
+                                            HorizontalAlignment="Left" Margin="10,0,0,0">
+                                        <TextBlock Text="{Binding BadgeText}" />
+                                    </Border>
+                                    <CheckBox Grid.Column="2" Content="설치" FontSize="13" VerticalAlignment="Center"
+                                              IsChecked="{Binding IsSelected}" IsVisible="{Binding IsOptional}"
+                                              IsEnabled="{Binding CanSelect}" />
+                                </Grid>
+
+                                <TextBlock Classes="muted" FontSize="13" Margin="0,7,0,0" TextWrapping="Wrap"
+                                           Text="{Binding Purpose}" />
+                                <TextBlock Classes="muted" FontSize="13" Margin="0,4,0,0" TextWrapping="Wrap"
+                                           Text="{Binding DetailText}" />
+
+                                <ProgressBar Margin="0,10,0,0" Minimum="0" Maximum="100"
+                                             Value="{Binding Percent}" IsIndeterminate="{Binding IsIndeterminate}"
+                                             IsVisible="{Binding IsBusy}" />
+
+                                <TextBlock Classes="status" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap"
+                                           Classes.failed="{Binding IsFailed}" Classes.success="{Binding IsInstalled}"
+                                           Text="{Binding StatusText}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- 상태 + 옵션 -->
+            <StackPanel Grid.Row="3" Margin="0,2,0,0">
+                <TextBlock Classes="status" Classes.failed="{Binding IsFailed}" Classes.success="{Binding IsSuccess}"
+                           Text="{Binding StatusText}" FontSize="15" TextWrapping="Wrap" />
+
+                <CheckBox Content="다음부터 이 알림을 표시하지 않습니다" Margin="0,12,0,0" FontSize="13"
+                          IsChecked="{Binding SkipNextTime}" IsVisible="{Binding ShowSkipOption}" />
+            </StackPanel>
+
+            <!-- 버튼 -->
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button Classes="primary" Content="지금 설치" MinWidth="140" Padding="22,8"
+                        Command="{Binding InstallCommand}" />
+                <Button Classes="ghost" Content="취소" Margin="10,0,0,0" Padding="16,8"
+                        Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
+                <Button Classes="ghost" Content="나중에" Margin="10,0,0,0"
+                        Click="Close_Click" IsVisible="{Binding !IsBusy}" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

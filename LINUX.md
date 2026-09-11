@@ -10,21 +10,22 @@ TJ 믹서/스피커가 연결된 매장용 리눅스 PC에 **오픈 노래방** 
 | 대상 하드웨어 | **x86_64(amd64) 전용** — ARM(aarch64)은 지원하지 않습니다 |
 | 대상 OS | Ubuntu 22.04/24.04, Debian 12, Linux Mint, Fedora 38+ 등 (데스크톱 환경 필요) |
 | 배포본 | `artifacts/linux-x64` 폴더 전체 (자체 포함 빌드 — .NET 설치 불필요) |
-| 사전 설치 | `ffmpeg` (필수), `fonts-noto-cjk` (한글), `yt-dlp` |
+| 사전 설치 | `ffmpeg` (필수), `fonts-noto-cjk` (한글), `yt-dlp` — **ffmpeg/yt-dlp 는 앱에서 자동 설치 가능**(3장) |
 | 디스크 사용량 | 약 400MB (배포본 + 내려받는 곡) |
 | 소리 출력 | 시스템 **기본 출력 장치**로만 재생됩니다 (앱에 장치 선택 기능 없음) |
 
-설치 요약 6단계:
+설치 요약 7단계:
 
 ```bash
 # 1) 배포본 복사 (예: ~/open-karaoke)
 # 2) 필수 패키지
 sudo apt update && sudo apt install -y ffmpeg fonts-noto-cjk
-# 3) yt-dlp 설치 (4장 참고)
+# 3) yt-dlp 설치 (4장 참고) — 앱을 실행하면 자동 설치 창으로 대신할 수 있습니다
 # 4) 실행 권한 + 첫 실행
 cd ~/open-karaoke && chmod +x OpenKaraoke install-desktop-entry.sh && ./OpenKaraoke
-# 5) ⚙ 설정에서 YouTube API 키 입력 후 저장
-# 6) TJ 믹서를 기본 출력 장치로 지정, 필요 시 ./install-desktop-entry.sh
+# 5) 자동 설치 창이 뜨면 "지금 설치" → ffmpeg/yt-dlp 내려받기 (ffmpeg는 앱 재시작 후 적용)
+# 6) ⚙ 설정에서 YouTube API 키 입력 후 저장
+# 7) TJ 믹서를 기본 출력 장치로 지정, 필요 시 ./install-desktop-entry.sh
 ```
 
 ## 1. 준비물
@@ -119,9 +120,26 @@ sudo dnf install -y ffmpeg google-noto-sans-cjk-fonts alsa-utils
 > OpenAL Soft 오디오 엔진(`libopenal.so`)은 **배포본에 포함**되어 있으므로 따로 설치할 필요가 없습니다.
 > Python·.NET 도 설치할 필요가 없습니다(자체 포함 빌드).
 
+### 앱 안에서 자동 설치 (sudo 없이)
+
+`ffmpeg` 와 `yt-dlp` 가 없으면 앱을 켤 때 **"필요한 도구 설치"** 창이 자동으로 뜨고, **지금 설치**를 누르면
+공식 빌드를 실행 파일 옆(`~/open-karaoke/ffmpeg`, `~/open-karaoke/yt-dlp`)에 내려받습니다.
+
+- 관리자 권한(sudo)이 필요 없고, 시스템 패키지를 건드리지 않습니다.
+- 내려받기 크기는 yt-dlp 약 20MB, ffmpeg 약 100MB이며 압축 해제에 `tar`/`xz-utils` 가 필요합니다
+  (Ubuntu/Debian 기본 포함: `sudo apt install -y tar xz-utils`).
+- **ffmpeg 는 앱을 다시 시작한 뒤부터** 재생에 적용됩니다(실행 중인 재생 엔진은 시작 시 ffmpeg 경로를 고정).
+  yt-dlp 는 설치 즉시 다음 다운로드부터 사용됩니다.
+- 다시 묻지 않게 하려면 창에서 **다음부터 이 알림을 표시하지 않습니다**를 체크하고 닫으면 됩니다.
+  이후에도 **⚙ 설정 → 외부 도구 경로 → 누락 도구 자동 설치**로 직접 설치할 수 있습니다.
+- 자동 설치 대신 배포판 패키지(`sudo apt install ffmpeg`)를 쓰는 편이 좋다면 위 3장 안내를 그대로 따르세요.
+  앱은 **⚙ 설정 경로 → 실행 파일 옆 → PATH** 순으로 찾으므로 둘 다 있어도 충돌하지 않습니다
+  (PATH보다 실행 파일 옆이 우선입니다).
+
 ## 4. yt-dlp 설치 (MR 다운로드용)
 
-아래 셋 중 **하나**만 하면 됩니다.
+가장 간단한 방법은 **앱 안에서 자동 설치**(3장 "앱 안에서 자동 설치")입니다. 아래는 직접 설치하는 방법이며,
+셋 중 **하나**만 하면 됩니다.
 
 ### 방법 A — 공식 바이너리를 앱 폴더에 넣기 (권장)
 
@@ -180,10 +198,12 @@ tail -n 20 ~/open-karaoke/logs/app.log
 체크리스트:
 
 1. 창이 뜨고 한글이 정상 표시되는가 (깨지면 `fonts-noto-cjk`)
-2. ⚙ 설정 → **YouTube API 키** 입력 → 저장 → 상태 문구가 "저장되었습니다"인가
-3. 검색창에 곡명 입력 → 결과가 나오는가 (키 미설정/할당량 초과 시 실패)
-4. 결과에서 곡을 선택해 **다운로드** → 목록에 추가되고 재생되는가
-5. 키(±6 반음)·템포(80~120%)를 바꿔도 소리가 정상인가
+2. 첫 실행 시 **"필요한 도구 설치"** 창이 떴다면 **지금 설치**로 ffmpeg/yt-dlp 를 내려받았는가
+   (ffmpeg 를 설치했다면 앱을 한 번 다시 시작 — 이후 항목은 재시작 후 확인)
+3. ⚙ 설정 → **YouTube API 키** 입력 → 저장 → 상태 문구가 "저장되었습니다"인가
+4. 검색창에 곡명 입력 → 결과가 나오는가 (키 미설정/할당량 초과 시 실패)
+5. 결과에서 곡을 선택해 **다운로드** → 목록에 추가되고 재생되는가
+6. 키(±6 반음)·템포(80~120%)를 바꿔도 소리가 정상인가
 
 > `설정` 창의 `찾아보기` 는 데스크톱 포털이 없는 최소 세션에서 열리지 않을 수 있습니다.
 > 이때는 경로를 직접 입력하면 됩니다(예: `/usr/bin/ffmpeg`).
@@ -339,6 +359,11 @@ rm -rf ~/open-karaoke
 - 한글 입력기(IBus/Fcitx5) 조합 입력은 데스크톱 환경에 따라 제약이 있을 수 있습니다. 입력이 되지 않으면
   곡명을 붙여넣기(Ctrl+V)로 넣거나, 곡 추가는 Windows PC에서 미리 해 두는 방법을 사용하세요.
   (이 항목은 리눅스 PC에서의 실제 입력기 환경 검증이 필요합니다.)
+- **앱으로 설치한 ffmpeg 는 재시작 후 적용** — 재생 엔진이 시작 시 ffmpeg 경로를 고정하기 때문입니다.
+  yt-dlp 는 재시작 없이 즉시 사용됩니다.
+- **자동 설치를 쓰려면 설치 폴더에 쓰기 권한**이 있어야 합니다(기본 `~/open-karaoke` 는 문제 없음).
+  `/opt` 등 읽기 전용 위치에 두었다면 자동 설치가 실패하므로 3장의 `sudo apt install` 방법을 사용하세요.
+- 자동 설치에는 인터넷 연결과 `tar`/`xz-utils`(Ubuntu/Debian 기본 포함)가 필요합니다.
 
 ## 13. 문제 해결
 
@@ -354,8 +379,8 @@ tail -n 50 ~/open-karaoke/logs/app.log
 | `No such file or directory` 인데 파일은 있음 | 잘못된 아키텍처 또는 실행 권한 없음 → `file OpenKaraoke` 로 ELF x86-64 확인, `aarch64` 면 미지원 |
 | 창이 뜨지 않음 / `Unable to open X display` | `libx11-6 libice6 libsm6 libfontconfig1 libgl1` 설치, Wayland면 `xwayland` 설치, Xorg 세션으로 로그인 |
 | 글자가 네모(□□)로 보임 | `sudo apt install fonts-noto-cjk` |
-| `ffmpeg를 찾을 수 없습니다` | `sudo apt install ffmpeg` 후 재실행, 또는 ⚙ 설정에서 경로 지정 |
-| `yt-dlp가 없습니다` | 4장대로 설치, 실행 파일 옆에 `yt-dlp` 로 두거나 ⚙ 설정에서 경로 지정 |
+| `ffmpeg를 찾을 수 없습니다` | ⚙ 설정 → **누락 도구 자동 설치**, 또는 `sudo apt install ffmpeg` 후 재실행, 또는 ⚙ 설정에서 경로 지정 |
+| `yt-dlp가 없습니다` | ⚙ 설정 → **누락 도구 자동 설치**, 또는 4장대로 설치, 또는 ⚙ 설정에서 경로 지정 |
 | 검색 결과가 없음 | API 키 미설정·오타, 할당량 초과(하루 한도), 네트워크 차단 → ⚙ 설정에서 확인 |
 | 다운로드가 실패함 | yt-dlp 버전이 오래됨 → 방법 A(공식 바이너리)로 교체 후 `./yt-dlp -U` |
 | 소리가 나지 않음 | 기본 출력 장치가 TJ 믹서인지 확인(7장), `alsamixer` 음소거 해제, `ALSOFT_LOGLEVEL=3` 로 진단 |

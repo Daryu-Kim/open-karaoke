@@ -102,6 +102,11 @@
                     </Grid>
                     <TextBlock Classes="muted" FontSize="13" Margin="0,7,0,0" TextWrapping="Wrap"
                                Text="{Binding YtDlpStatus}" />
+
+                    <Button Classes="ghost" Content="누락 도구 자동 설치" Margin="0,16,0,0" Padding="16,8"
+                            HorizontalAlignment="Left" Click="InstallTools_Click" />
+                    <TextBlock Classes="muted" FontSize="12" Margin="0,7,0,0" TextWrapping="Wrap"
+                               Text="yt-dlp와 ffmpeg를 앱 폴더에 내려받아 설치합니다. '선택'으로 표시된 도구는 창에서 직접 체크한 뒤 설치해 주세요." />
                 </StackPanel>
             </Border>
         </StackPanel>

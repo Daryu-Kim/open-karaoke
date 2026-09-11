@@ -112,6 +112,12 @@ public partial class SettingsViewModel : ObservableObject
         SetStatus("설정을 저장했습니다. FFmpeg·yt-dlp는 다음 작업부터, API 키는 다음 검색부터 적용됩니다.", failed: false);
     }
 
+    /// <summary>
+    /// Marks the dialog as changed so the shell re-applies settings on close. Used after tools were
+    /// installed from here, where the paths come from the installer rather than the text boxes.
+    /// </summary>
+    public void MarkSaved() => Saved = true;
+
     /// <summary>Re-reads the tool locations so the dialog shows what would actually run.</summary>
     public void RefreshToolStatus()
     {

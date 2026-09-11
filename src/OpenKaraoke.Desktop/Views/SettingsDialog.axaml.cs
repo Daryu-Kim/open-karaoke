@@ -60,6 +60,25 @@ public partial class SettingsDialog : Window
         }
     }
 
+    private async void InstallTools_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ToolInstallOutcome outcome = await ToolInstallDialog.ShowAsync(this, showSkipOption: false);
+            if (outcome.Installed)
+            {
+                // Save so the shell picks up the new tool paths as soon as the settings close.
+                _viewModel.MarkSaved();
+                _viewModel.RefreshToolStatus();
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write($"[settings] 도구 설치 창을 열지 못했습니다: {ex}");
+            await MessageDialog.InfoAsync(this, "오류", $"도구 설치 창을 열지 못했습니다.\n\n{ex.Message}");
+        }
+    }
+
     private async Task<string?> PickExecutableAsync(string title)
     {
         try

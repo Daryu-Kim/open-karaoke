@@ -16,6 +16,12 @@ public static class AppSettings
     public const string YtDlpPathEnvVar = "OPENKARAOKE_YTDLP";
     public const string LocalConfigFileName = "appsettings.local.json";
 
+    /// <summary>Section holding UI preferences that are not tool paths.</summary>
+    public const string UiSection = "Ui";
+
+    /// <summary>Set when the operator asked not to be reminded about missing tools again.</summary>
+    public const string SkipToolInstallPromptKey = "SkipToolInstallPrompt";
+
     private static readonly JsonSerializerOptions WriteOptions = new() { WriteIndented = true };
 
     /// <summary>Absolute path of the local JSON file that the 설정 screen writes.</summary>
@@ -52,6 +58,22 @@ public static class AppSettings
         SetValue(root, "Youtube", "ApiKey", youtubeApiKey);
         SetValue(root, "Tools", "FfmpegPath", ffmpegPath);
         SetValue(root, "Tools", "YtDlpPath", ytDlpPath);
+
+        File.WriteAllText(path, root.ToJsonString(WriteOptions), new UTF8Encoding(false));
+    }
+
+    /// <summary>Reads a boolean flag from the local file; a missing or unparsable value is false.</summary>
+    public static bool GetFlag(string section, string name, string? configDirectory = null)
+        => ReadValue(GetLocalConfigPath(configDirectory), section, name) is { } value
+            && bool.TryParse(value, out bool parsed)
+            && parsed;
+
+    /// <summary>Stores a boolean flag, removing the entry again when it is turned off.</summary>
+    public static void SetFlag(string section, string name, bool value, string? configDirectory = null)
+    {
+        string path = GetLocalConfigPath(configDirectory);
+        JsonObject root = ReadRoot(path);
+        SetValue(root, section, name, value ? "true" : null);
 
         File.WriteAllText(path, root.ToJsonString(WriteOptions), new UTF8Encoding(false));
     }

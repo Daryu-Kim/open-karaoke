@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using OpenKaraoke.Core.Configuration;
+using OpenKaraoke.Core.Tools;
 using OpenKaraoke.Desktop.Diagnostics;
 using OpenKaraoke.Desktop.ViewModels;
 
@@ -82,6 +84,55 @@ public partial class MainWindow : Window
         {
             AppLog.Write($"[library] 초기화 실패: {ex}");
             await MessageDialog.InfoAsync(this, "오류", $"라이브러리를 여는 중 오류가 발생했습니다.\n\n{ex.Message}");
+        }
+
+        await PromptForMissingToolsAsync();
+    }
+
+    /// <summary>
+    /// Startup check: when a tool this platform cannot work without is missing, offer to download
+    /// it. The reminder can be switched off permanently from inside the dialog.
+    /// </summary>
+    private async Task PromptForMissingToolsAsync()
+    {
+        try
+        {
+            if (AppSettings.GetFlag(AppSettings.UiSection, AppSettings.SkipToolInstallPromptKey))
+            {
+                return;
+            }
+
+            if (!ToolCatalog.AnyRequiredMissing())
+            {
+                return;
+            }
+
+            AppLog.Write("[tools] 필수 도구가 없어 설치 안내를 표시합니다");
+            await InstallMissingToolsAsync(showSkipOption: true);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write($"[tools] 설치 안내를 표시하지 못했습니다: {ex}");
+        }
+    }
+
+    /// <summary>Runs the 설치 dialog; installed tools are applied without restarting where possible.</summary>
+    private async Task InstallMissingToolsAsync(bool showSkipOption)
+    {
+        ToolInstallOutcome outcome = await ToolInstallDialog.ShowAsync(this, showSkipOption);
+
+        if (outcome.Installed)
+        {
+            // Re-creates the yt-dlp runner so the freshly downloaded binary is used right away.
+            _viewModel.ApplySettings();
+        }
+
+        if (outcome.RestartRequired)
+        {
+            await MessageDialog.InfoAsync(
+                this,
+                "앱 다시 시작 필요",
+                "ffmpeg 설치가 끝났습니다.\n재생에 적용하려면 앱을 다시 시작해 주세요.");
         }
     }
 
