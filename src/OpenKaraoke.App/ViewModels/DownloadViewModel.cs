@@ -93,7 +93,7 @@ public partial class DownloadViewModel : ObservableObject
         {
             var progress = new Progress<double>(p => ProgressPercent = p);
             YtDlpDownloadResult result =
-                await _runner.DownloadAudioAsync(VideoId, _outputDirectory, progress, _cts.Token);
+                await _runner.DownloadMediaAsync(VideoId, _outputDirectory, progress, _cts.Token);
 
             if (!result.Success || result.OutputFilePath == null)
             {

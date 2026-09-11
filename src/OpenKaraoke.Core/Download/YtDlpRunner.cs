@@ -3,7 +3,7 @@ using OpenKaraoke.Core.Configuration;
 
 namespace OpenKaraoke.Core.Download;
 
-/// <summary>Result of one yt-dlp audio download attempt.</summary>
+/// <summary>Result of one yt-dlp media download attempt.</summary>
 public sealed record YtDlpDownloadResult(
     bool Success,
     string? OutputFilePath,
@@ -16,10 +16,10 @@ public sealed record YtDlpDownloadResult(
 public interface IYtDlpRunner
 {
     /// <summary>
-    /// Downloads the best single audio stream of <paramref name="videoId"/> into
+    /// Downloads the best video+audio version of <paramref name="videoId"/> into
     /// <paramref name="outputDirectory"/>, streaming progress through <paramref name="progress"/>.
     /// </summary>
-    Task<YtDlpDownloadResult> DownloadAudioAsync(
+    Task<YtDlpDownloadResult> DownloadMediaAsync(
         string videoId,
         string outputDirectory,
         IProgress<double>? progress,
@@ -54,7 +54,14 @@ public sealed class YtDlpProcessRunner : IYtDlpRunner
             explicitPath ?? AppSettings.GetYtDlpPath(),
             "yt-dlp");
 
-    public async Task<YtDlpDownloadResult> DownloadAudioAsync(
+    /// <summary>Path of the ffmpeg that yt-dlp should use to merge video+audio; null when absent.</summary>
+    private static string? ResolveFfmpegForMerge()
+    {
+        string path = Audio.FfmpegLocator.Resolve();
+        return File.Exists(path) ? path : null;
+    }
+
+    public async Task<YtDlpDownloadResult> DownloadMediaAsync(
         string videoId,
         string outputDirectory,
         IProgress<double>? progress,
@@ -81,7 +88,7 @@ public sealed class YtDlpProcessRunner : IYtDlpRunner
             UseShellExecute = false,
             CreateNoWindow = true,
         };
-        foreach (string arg in YtDlpArguments.Build(videoId, outputDirectory))
+        foreach (string arg in YtDlpArguments.Build(videoId, outputDirectory, ResolveFfmpegForMerge()))
         {
             startInfo.ArgumentList.Add(arg);
         }
@@ -155,9 +162,16 @@ public sealed class YtDlpProcessRunner : IYtDlpRunner
         try
         {
             string prefix = Path.Combine(outputDirectory, videoId + ".");
-            return Directory.EnumerateFiles(outputDirectory)
+            List<string> candidates = Directory.EnumerateFiles(outputDirectory)
                 .Where(f => !f.EndsWith(".part", StringComparison.OrdinalIgnoreCase))
-                .FirstOrDefault(f => f.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+                .Where(f => f.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            // Prefer the final container (abc123.mp4) over intermediate parts (abc123.f137.mp4)
+            // and over a leftover audio-only file (abc123.m4a) from an earlier download.
+            return candidates.FirstOrDefault(f => IsFinalContainer(f, videoId))
+                ?? candidates.FirstOrDefault(Video.VideoFiles.IsVideoContainer)
+                ?? candidates.FirstOrDefault();
         }
         catch (IOException)
         {
@@ -168,6 +182,10 @@ public sealed class YtDlpProcessRunner : IYtDlpRunner
             return null;
         }
     }
+
+    private static bool IsFinalContainer(string path, string videoId) =>
+        Video.VideoFiles.IsVideoContainer(path) &&
+        Path.GetFileNameWithoutExtension(path).Equals(videoId, StringComparison.OrdinalIgnoreCase);
 
     private static async Task ReadLinesAsync(
         StreamReader reader,

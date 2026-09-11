@@ -51,6 +51,31 @@ public class YtDlpOutputTrackerTests
     }
 
     [Fact]
+    public void MergeLine_ReplacesPartPathWithMergedFile()
+    {
+        var tracker = new YtDlpOutputTracker();
+        tracker.ProcessLine("[download] Destination: C:\\karaoke\\library\\abc123.f137.mp4");
+        tracker.ProcessLine("[download] 100% of  3.20MiB in 00:00:03");
+        tracker.ProcessLine("[download] Destination: C:\\karaoke\\library\\abc123.f140.m4a");
+        tracker.ProcessLine("[download] 100% of  1.20MiB in 00:00:01");
+        tracker.ProcessLine("[Merger] Merging formats into \"C:\\karaoke\\library\\abc123.mp4\"");
+        tracker.ProcessLine("Deleting original file C:\\karaoke\\library\\abc123.f137.mp4 (pass -k to keep)");
+
+        Assert.True(tracker.Completed);
+        Assert.Equal("C:\\karaoke\\library\\abc123.mp4", tracker.DestinationPath);
+    }
+
+    [Fact]
+    public void LegacyFfmpegMergeLine_ReplacesPartPathWithMergedFile()
+    {
+        var tracker = new YtDlpOutputTracker();
+        tracker.ProcessLine("[ffmpeg] Merging formats into \"C:\\karaoke\\library\\abc123.mp4\"");
+
+        Assert.True(tracker.Completed);
+        Assert.Equal("C:\\karaoke\\library\\abc123.mp4", tracker.DestinationPath);
+    }
+
+    [Fact]
     public void NonDownloadLines_AreIgnored()
     {
         var tracker = new YtDlpOutputTracker();

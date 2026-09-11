@@ -1,5 +1,6 @@
 using OpenKaraoke.Core.Formatting;
 using OpenKaraoke.Core.Library;
+using OpenKaraoke.Core.Video;
 
 namespace OpenKaraoke.Desktop.ViewModels;
 
@@ -38,4 +39,14 @@ public sealed class SongItemViewModel
 
     /// <summary>Avalonia binds IsVisible directly, so the empty-length check lives here.</summary>
     public bool HasDuration => DurationText.Length > 0;
+
+    /// <summary>
+    /// True when the stored file carries a video stream. Songs downloaded before 가사 화면 support
+    /// are audio only; those rows offer "영상 다시 받기". Decided from the file extension so no
+    /// database column is needed.
+    /// </summary>
+    public bool HasVideoFile => VideoFiles.IsVideoContainer(LocalPath);
+
+    /// <summary>Shows the 영상 다시 받기 button on rows that only have sound.</summary>
+    public bool CanRedownloadVideo => !HasVideoFile;
 }

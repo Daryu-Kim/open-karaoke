@@ -47,6 +47,12 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     /// <summary>Raised when the header 설정 button is pressed; the window shows the dialog.</summary>
     public event EventHandler? SettingsRequested;
 
+    /// <summary>Raised after a song was opened and started; the argument is the local media path.</summary>
+    public event EventHandler<string>? TrackOpened;
+
+    /// <summary>Raised when the current song ended or failed to open; the karaoke screen resets.</summary>
+    public event EventHandler? TrackClosed;
+
     /// <summary>YouTube search sub-view model; the API key is read from local config.</summary>
     public SearchViewModel Search { get; }
 
@@ -138,13 +144,29 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(IsSearchMode))]
     private bool _isLibraryMode = true;
 
-    public bool IsSearchMode => !IsLibraryMode;
+    /// <summary>노래방 화면 tab is active: the content area shows the large lyric/video panel.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSearchMode))]
+    [NotifyPropertyChangedFor(nameof(IsVideoOverlayVisible))]
+    private bool _isVideoMode;
+
+    public bool IsSearchMode => !IsLibraryMode && !IsVideoMode;
 
     [RelayCommand]
-    private void ShowLibrary() => IsLibraryMode = true;
+    private void ShowLibrary() => SetMode(library: true, video: false);
 
     [RelayCommand]
-    private void ShowSearch() => IsLibraryMode = false;
+    private void ShowSearch() => SetMode(library: false, video: false);
+
+    [RelayCommand]
+    private void ShowVideo() => SetMode(library: false, video: true);
+
+    /// <summary>Switches the content area; the three tabs are mutually exclusive.</summary>
+    public void SetMode(bool library, bool video)
+    {
+        IsVideoMode = video;
+        IsLibraryMode = library;
+    }
 
     /// <summary>Requests the 설정 dialog; the view owns the window.</summary>
     [RelayCommand]
@@ -152,6 +174,11 @@ public partial class ShellViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _isFullScreen;
+
+    /// <summary>True when the entire window is covered by the karaoke screen (전체화면 + 노래방 화면).</summary>
+    public bool IsVideoOverlayVisible => IsFullScreen && IsVideoMode;
+
+    partial void OnIsFullScreenChanged(bool value) => OnPropertyChanged(nameof(IsVideoOverlayVisible));
 
     [ObservableProperty]
     private string _nowPlayingTitle = "재생할 곡을 선택하세요";
@@ -201,6 +228,20 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     /// <summary>0..1 playback ratio driving the PlayerBar progress fill.</summary>
     [ObservableProperty]
     private double _progressFraction;
+
+    /// <summary>Current playback position (source timeline) used to pace the video frames.</summary>
+    public TimeSpan PlaybackPosition => _player.Position;
+
+    /// <summary>True while the engine is producing sound; the karaoke screen holds its frame while paused.</summary>
+    public bool IsPlayingAudio => _player.State == PlayerState.Playing;
+
+    /// <summary>Status line drawn over the 노래방 화면 while no frame is flowing.</summary>
+    [ObservableProperty]
+    private string _videoStatusText = "재생할 곡을 선택하세요";
+
+    /// <summary>Hides the status line as soon as frames are running.</summary>
+    [ObservableProperty]
+    private bool _isVideoStatusVisible = true;
 
     private int _keySemitones;
 
@@ -354,6 +395,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         {
             _player.Stop();
             IsPlaying = false;
+            TrackClosed?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -381,6 +423,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
             NowPlayingSubtitle = BuildOpenFailureSubtitle(song);
             HasTrack = false;
             IsPlaying = false;
+            TrackClosed?.Invoke(this, EventArgs.Empty);
             return;
         }
 
@@ -395,6 +438,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         CurrentTimeText = MediaTimeFormatter.Format(TimeSpan.Zero);
         ProgressFraction = 0;
         IsPlaying = _player.Play();
+        TrackOpened?.Invoke(this, song.LocalPath);
     }
 
     /// <summary>
@@ -478,6 +522,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         NowPlayingSubtitle = string.Empty;
         CurrentTimeText = MediaTimeFormatter.Format(TimeSpan.Zero);
         ProgressFraction = 0;
+        TrackClosed?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnQueueChanged(object? sender, NotifyCollectionChangedEventArgs e)

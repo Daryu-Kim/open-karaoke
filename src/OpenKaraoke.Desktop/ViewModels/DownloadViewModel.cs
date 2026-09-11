@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using OpenKaraoke.Core.Download;
 using OpenKaraoke.Core.Library;
 using OpenKaraoke.Core.Search;
+using OpenKaraoke.Core.Video;
 using OpenKaraoke.Desktop.Diagnostics;
 
 namespace OpenKaraoke.Desktop.ViewModels;
@@ -18,14 +19,17 @@ public enum DownloadPhase
 }
 
 /// <summary>
-/// Downloads the MR audio of a chosen search result into the songs folder, then stores it in
+/// Downloads the MR media of a chosen search result into the songs folder, then stores it in
 /// the SQLite library with the metadata the owner confirms (title/artist/TJ 번호).
+/// The second constructor re-downloads an existing audio-only song as a video, keeping its
+/// metadata (라이브러리의 "영상 다시 받기").
 /// </summary>
 public partial class DownloadViewModel : ObservableObject
 {
     private readonly IYtDlpRunner _runner;
     private readonly ISongLibraryStore _store;
     private readonly string _outputDirectory;
+    private readonly string? _previousFilePath;
     private readonly CancellationTokenSource _cts = new();
 
     public DownloadViewModel(
@@ -44,9 +48,47 @@ public partial class DownloadViewModel : ObservableObject
         DurationText = source.DurationText;
     }
 
+    /// <summary>Re-download mode: replaces the file of a song that has no video (audio only).</summary>
+    public DownloadViewModel(
+        IYtDlpRunner runner,
+        ISongLibraryStore store,
+        string outputDirectory,
+        SongItemViewModel song)
+    {
+        _runner = runner;
+        _store = store;
+        _outputDirectory = outputDirectory;
+        _previousFilePath = song.LocalPath;
+        IsRedownload = true;
+        VideoId = song.VideoId;
+        SongTitle = song.Title;
+        Artist = song.Artist;
+        TjNumber = song.TjNumber ?? string.Empty;
+        ThumbnailUrl = song.ThumbnailUrl;
+        DurationText = song.DurationText;
+        StatusText = "이 곡을 가사 영상(1080p)으로 다시 내려받습니다. 제목과 가수를 확인한 뒤 다시 받기를 눌러 주세요.";
+    }
+
     public string VideoId { get; }
     public string ThumbnailUrl { get; }
     public string DurationText { get; }
+
+    /// <summary>True when this session replaces the file of an existing library song.</summary>
+    public bool IsRedownload { get; }
+
+    /// <summary>Library file this session replaces; null for a plain first download.</summary>
+    public string? PreviousFilePath => IsRedownload ? _previousFilePath : null;
+
+    /// <summary>Dialog caption; differs for the 영상 다시 받기 flow.</summary>
+    public string DialogTitle => IsRedownload ? "영상 다시 받기" : "노래 다운로드";
+
+    /// <summary>Sub-title shown under the dialog caption.</summary>
+    public string DescriptionText => IsRedownload
+        ? "가사(영상)가 있는 파일로 다시 받아 라이브러리의 곡을 교체합니다."
+        : "라이브러리에 저장할 곡 정보를 확인하고 다운로드하세요.";
+
+    /// <summary>Primary button caption.</summary>
+    public string StartButtonText => IsRedownload ? "다시 받기" : "다운로드";
 
     /// <summary>Becomes non-null after a successful download; the caller stores/refreshes the library.</summary>
     public SongRecord? SavedSong { get; private set; }
@@ -105,7 +147,7 @@ public partial class DownloadViewModel : ObservableObject
         {
             var progress = new Progress<double>(p => ProgressPercent = p);
             YtDlpDownloadResult result =
-                await _runner.DownloadAudioAsync(VideoId, _outputDirectory, progress, _cts.Token);
+                await _runner.DownloadMediaAsync(VideoId, _outputDirectory, progress, _cts.Token);
 
             if (!result.Success || result.OutputFilePath == null)
             {
@@ -132,7 +174,8 @@ public partial class DownloadViewModel : ObservableObject
 
             SavedSong = saved;
             ProgressPercent = 100;
-            StatusText = $"“{title}” 저장 완료!";
+            ReplacePreviousFile(result.OutputFilePath);
+            StatusText = IsRedownload ? $"“{title}” 영상 다시 받기 완료!" : $"“{title}” 저장 완료!";
             Phase = DownloadPhase.Success;
         }
         catch (OperationCanceledException)
@@ -153,6 +196,34 @@ public partial class DownloadViewModel : ObservableObject
     {
         _cts.Cancel();
         StatusText = "다운로드를 취소하는 중입니다...";
+    }
+
+    /// <summary>
+    /// Removes the audio-only file that the new download replaced so the songs folder does not grow
+    /// with dead files. A file still open by the player is left behind on purpose.
+    /// </summary>
+    private void ReplacePreviousFile(string newPath)
+    {
+        if (!IsRedownload
+            || string.IsNullOrWhiteSpace(_previousFilePath)
+            || string.Equals(_previousFilePath, newPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        try
+        {
+            if (File.Exists(_previousFilePath))
+            {
+                File.Delete(_previousFilePath);
+                FfmpegMediaProbe.Invalidate(_previousFilePath);
+                AppLog.Write($"[download] 이전 음원 삭제: {_previousFilePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write($"[download] 이전 음원 삭제 실패({_previousFilePath}): {ex.Message}");
+        }
     }
 
     private static long TryGetFileSize(string path)

@@ -18,7 +18,13 @@ public sealed class YtDlpOutputTracker
     private static readonly Regex AlreadyDownloadedRegex =
         new(@"^\[download\]\s+(?<path>.+?)\s+has already been downloaded$", RegexOptions.Compiled);
 
-    /// <summary>Last file destination reported by yt-dlp, if any.</summary>
+    private static readonly Regex MergeRegex =
+        new(@"^\[(?:Merger|ffmpeg)\]\s+Merging formats into\s+""(?<path>.+)""$", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Last file destination reported by yt-dlp, if any. When the video and audio streams are merged
+    /// this is the merged file, which is the one the library has to point at.
+    /// </summary>
     public string? DestinationPath { get; private set; }
 
     /// <summary>Most recently reported download percentage (0-100).</summary>
@@ -70,6 +76,16 @@ public sealed class YtDlpOutputTracker
         if (already.Success)
         {
             DestinationPath = already.Groups["path"].Value.Trim();
+            Completed = true;
+            return;
+        }
+
+        // The separately downloaded video/audio parts are deleted once ffmpeg muxed them,
+        // so the merged file (not the part reported by the last "Destination:" line) is the result.
+        Match merge = MergeRegex.Match(trimmed);
+        if (merge.Success)
+        {
+            DestinationPath = merge.Groups["path"].Value.Trim();
             Completed = true;
         }
     }

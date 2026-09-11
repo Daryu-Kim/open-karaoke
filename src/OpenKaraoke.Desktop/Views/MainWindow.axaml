@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:media="clr-namespace:OpenKaraoke.Desktop.Media"
         x:Class="OpenKaraoke.Desktop.Views.MainWindow"
         Title="Open Karaoke — 노래방"
         Width="1600" Height="900"
@@ -123,6 +124,9 @@
                                 Command="{Binding ShowLibraryCommand}" />
                         <Button Classes="chip" Classes.active="{Binding IsSearchMode}" Content="노래 찾기"
                                 Margin="8,0,0,0" Command="{Binding ShowSearchCommand}" />
+                        <Button Classes="chip" Classes.active="{Binding IsVideoMode}" Content="노래방 화면"
+                                Margin="8,0,0,0" Command="{Binding ShowVideoCommand}"
+                                ToolTip.Tip="손님용 가사(영상) 화면을 크게 표시합니다" />
                     </StackPanel>
 
                     <!-- 콘텐츠 영역 (모드에 따라 전환) -->
@@ -324,6 +328,11 @@
                                                         <TextBlock Text="{Binding DurationText}" FontSize="14" FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource Brush.AccentCyan}" />
                                                     </Border>
+                                                    <Button Classes="ghost" Content="영상 다시 받기" Padding="14,6" FontSize="14"
+                                                            Margin="0,0,12,0" VerticalAlignment="Center"
+                                                            IsVisible="{Binding CanRedownloadVideo}"
+                                                            Click="RedownloadSong_Click"
+                                                            ToolTip.Tip="가사 영상(1080p)으로 다시 내려받아 이 곡을 교체합니다" />
                                                     <Button Classes="ghost" Content="삭제" Padding="14,6" FontSize="14"
                                                             VerticalAlignment="Center" Click="DeleteSong_Click" />
                                                 </StackPanel>
@@ -332,6 +341,18 @@
                                     </ListBox.ItemTemplate>
                                 </ListBox>
                             </Grid>
+                        </Grid>
+
+                        <!-- 노래방 화면 (손님용 가사 영상) -->
+                        <Grid IsVisible="{Binding $parent[Window].DataContext.IsVideoMode}">
+                            <Border Background="Black" CornerRadius="12" ClipToBounds="True">
+                                <media:VideoSurface x:Name="PanelVideoSurface" />
+                            </Border>
+                            <TextBlock Text="{Binding $parent[Window].DataContext.VideoStatusText}"
+                                      IsVisible="{Binding $parent[Window].DataContext.IsVideoStatusVisible}"
+                                      Foreground="White" FontSize="22" FontWeight="Bold"
+                                      TextWrapping="Wrap" TextAlignment="Center" MaxWidth="620"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center" Margin="32" />
                         </Grid>
                     </Grid>
                 </Grid>
@@ -561,5 +582,18 @@
                 </Grid>
             </Grid>
         </Border>
+
+        <!-- 전체화면 노래방 화면 (F 키). 창 전체를 덮어 손님용 영상을 최대한 크게 보여준다. -->
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsVideoOverlayVisible}"
+              Background="{DynamicResource Brush.Bg}">
+            <Border Background="Black" CornerRadius="12" ClipToBounds="True">
+                <media:VideoSurface x:Name="FullScreenVideoSurface" />
+            </Border>
+            <TextBlock Text="{Binding VideoStatusText}"
+                       IsVisible="{Binding IsVideoStatusVisible}"
+                       Foreground="White" FontSize="30" FontWeight="Bold"
+                       TextWrapping="Wrap" TextAlignment="Center" MaxWidth="820"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="48" />
+        </Grid>
     </Grid>
 </Window>

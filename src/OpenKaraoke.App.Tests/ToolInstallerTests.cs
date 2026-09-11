@@ -198,7 +198,8 @@ public class ToolInstallerTests : IDisposable
         ToolRequirement ffmpeg = tools[1];
         Assert.Equal(ToolKind.Ffmpeg, ffmpeg.Kind);
         Assert.Equal("ffmpeg", ffmpeg.DisplayName);
-        Assert.Equal(OperatingSystem.IsWindows(), !ffmpeg.IsRequired);
+        // Video playback and mp4 merging need ffmpeg on every platform.
+        Assert.True(ffmpeg.IsRequired);
 
         // The shipped file names must match what the app searches for next to itself.
         Assert.EndsWith(OperatingSystem.IsWindows() ? ".exe" : string.Empty, tools[0].FileName);

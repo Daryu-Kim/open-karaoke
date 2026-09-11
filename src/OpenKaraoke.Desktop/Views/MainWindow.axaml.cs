@@ -2,10 +2,12 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform;
 using Avalonia.VisualTree;
 using OpenKaraoke.Core.Configuration;
 using OpenKaraoke.Core.Tools;
 using OpenKaraoke.Desktop.Diagnostics;
+using OpenKaraoke.Desktop.Media;
 using OpenKaraoke.Desktop.ViewModels;
 
 namespace OpenKaraoke.Desktop.Views;
@@ -13,10 +15,15 @@ namespace OpenKaraoke.Desktop.Views;
 /// <summary>
 /// Main kiosk window. Owns fullscreen state (UI/chrome concern); the shell
 /// view model exposes the toggle command and the observable state.
+/// It also owns the karaoke screen (가사 화면): the video frames are decoded in
+/// <see cref="VideoPlayback"/> and painted into either the in-app panel, the fullscreen
+/// overlay, or the customer-monitor window - exactly one of them at a time.
 /// </summary>
 public partial class MainWindow : Window
 {
     private readonly ShellViewModel _viewModel;
+    private readonly VideoPlayback _videoPlayback;
+    private VideoWindow? _videoWindow;
     private WindowState _restoreState = WindowState.Normal;
     private bool _isFullScreen;
 
@@ -29,6 +36,14 @@ public partial class MainWindow : Window
         _viewModel.FullscreenRequested += OnFullscreenRequested;
         _viewModel.SettingsRequested += OnSettingsRequested;
         _viewModel.Search.DownloadRequested += OnDownloadRequested;
+        _viewModel.TrackOpened += OnTrackOpened;
+        _viewModel.TrackClosed += OnTrackClosed;
+        _viewModel.PropertyChanged += OnShellPropertyChanged;
+
+        _videoPlayback = new VideoPlayback(
+            () => _viewModel.PlaybackPosition,
+            () => _viewModel.IsPlayingAudio);
+        _videoPlayback.StateChanged += OnVideoStateChanged;
 
         AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel);
         Opened += MainWindow_Opened;
@@ -40,7 +55,159 @@ public partial class MainWindow : Window
         _viewModel.Search.DownloadRequested -= OnDownloadRequested;
         _viewModel.SettingsRequested -= OnSettingsRequested;
         _viewModel.FullscreenRequested -= OnFullscreenRequested;
+        _viewModel.TrackOpened -= OnTrackOpened;
+        _viewModel.TrackClosed -= OnTrackClosed;
+        _viewModel.PropertyChanged -= OnShellPropertyChanged;
+        _videoPlayback.StateChanged -= OnVideoStateChanged;
+        _videoPlayback.Dispose();
+        CloseVideoWindow();
         _viewModel.Dispose();
+    }
+
+    // ═══════════ 노래방 화면 (가사 영상) ═══════════
+
+    /// <summary>Second monitor wired to the customer TV; null when the shop PC has one screen.</summary>
+    private Screen? FindCustomerScreen()
+    {
+        Screen? primary = Screens.Primary;
+        return Screens.All.FirstOrDefault(screen => !screen.IsPrimary && !ReferenceEquals(screen, primary));
+    }
+
+    private void OnTrackOpened(object? sender, string path)
+    {
+        _videoPlayback.Load(path);
+
+        // Without a customer monitor the shop PC is the only screen, so show the karaoke
+        // screen right away instead of waiting for a click on the tab.
+        if (FindCustomerScreen() is null)
+        {
+            _viewModel.SetMode(library: false, video: true);
+        }
+
+        UpdateVideoTarget();
+    }
+
+    private void OnTrackClosed(object? sender, EventArgs e)
+    {
+        _videoPlayback.Stop();
+        UpdateVideoTarget();
+    }
+
+    private void OnVideoStateChanged(object? sender, EventArgs e) => UpdateVideoTarget();
+
+    private void OnShellPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ShellViewModel.IsVideoMode) or nameof(ShellViewModel.IsFullScreen))
+        {
+            UpdateVideoTarget();
+        }
+    }
+
+    /// <summary>
+    /// Routes the decoded frames to the customer monitor when one is attached, otherwise to the
+    /// in-app karaoke panel (or the fullscreen overlay). The other surfaces stay detached, which
+    /// pauses decoding and keeps a hidden screen from eating CPU.
+    /// </summary>
+    private void UpdateVideoTarget()
+    {
+        Screen? customer = FindCustomerScreen();
+        string message = DescribeVideoMessage();
+
+        if (customer is not null && _viewModel.HasTrack)
+        {
+            VideoWindow window = EnsureVideoWindow();
+            PlaceOnCustomerScreen(window, customer);
+            window.SetStatus(message);
+            _videoPlayback.Attach(window.Surface);
+
+            _viewModel.VideoStatusText = message.Length > 0
+                ? message
+                : "고객용 모니터에 가사 화면을 표시하고 있습니다";
+            _viewModel.IsVideoStatusVisible = true;
+            return;
+        }
+
+        CloseVideoWindow();
+
+        bool panelVisible = _viewModel.IsVideoMode;
+        _videoPlayback.Attach(
+            panelVisible ? (_viewModel.IsFullScreen ? FullScreenVideoSurface : PanelVideoSurface) : null);
+
+        _viewModel.VideoStatusText = message;
+        _viewModel.IsVideoStatusVisible = message.Length > 0;
+    }
+
+    /// <summary>Korean status line for the karaoke screen; empty while frames are flowing.</summary>
+    private string DescribeVideoMessage()
+    {
+        if (_videoPlayback.MediaPath is null)
+        {
+            return "재생할 곡을 선택하세요";
+        }
+
+        if (_videoPlayback.Message is { Length: > 0 } message)
+        {
+            return message;
+        }
+
+        return _videoPlayback.HasVideo ? string.Empty : VideoPlayback.NoVideoMessage;
+    }
+
+    private VideoWindow EnsureVideoWindow()
+    {
+        if (_videoWindow is { } existing)
+        {
+            if (!existing.IsVisible)
+            {
+                existing.Show();
+            }
+
+            return existing;
+        }
+
+        var window = new VideoWindow();
+        window.Closed += OnVideoWindowClosed;
+        _videoWindow = window;
+        window.Show();
+        return window;
+    }
+
+    /// <summary>Sizes the borderless window to the whole customer monitor.</summary>
+    private static void PlaceOnCustomerScreen(VideoWindow window, Screen screen)
+    {
+        // A window the operator dragged stays where they put it (the escape hatch for window
+        // managers that ignore programmatic placement); the size is still managed.
+        if (!window.MovedByUser)
+        {
+            window.Position = screen.Bounds.Position;
+        }
+
+        window.Width = screen.Bounds.Width / screen.Scaling;
+        window.Height = screen.Bounds.Height / screen.Scaling;
+    }
+
+    private void OnVideoWindowClosed(object? sender, EventArgs e)
+    {
+        if (sender is VideoWindow window)
+        {
+            window.Closed -= OnVideoWindowClosed;
+            if (ReferenceEquals(_videoWindow, window))
+            {
+                _videoWindow = null;
+            }
+        }
+    }
+
+    private void CloseVideoWindow()
+    {
+        if (_videoWindow is not { } window)
+        {
+            return;
+        }
+
+        _videoWindow = null;
+        window.Closed -= OnVideoWindowClosed;
+        window.Close();
     }
 
     private void OnFullscreenRequested(object? sender, EventArgs e) => ToggleFullScreen();
@@ -148,14 +315,68 @@ public partial class MainWindow : Window
         _ = ShowDownloadDialogAsync(download);
     }
 
+    /// <summary>
+    /// Re-downloads a library song that only has sound, so the customer screen can show lyrics.
+    /// The song keeps its metadata (제목/가수/TJ 번호) and the old file is dropped afterwards.
+    /// </summary>
+    private async void RedownloadSong_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: SongItemViewModel item })
+        {
+            return;
+        }
+
+        bool confirmed = await MessageDialog.ConfirmAsync(
+            this,
+            "영상 다시 받기",
+            $"“{item.Title}” 곡을 가사 영상(1080p)으로 다시 받을까요?\n"
+            + "용량이 커지지만 손님용 화면에 가사가 표시됩니다.");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        var download = new DownloadViewModel(
+            _viewModel.DownloadRunner,
+            _viewModel.SongStore,
+            _viewModel.SongsDirectory,
+            item);
+
+        await ShowDownloadDialogAsync(download);
+    }
+
     private async Task ShowDownloadDialogAsync(DownloadViewModel download)
     {
         var dialog = new DownloadDialog(download);
         bool saved = await dialog.ShowDialog<bool>(this);
         if (saved && download.SavedSong != null)
         {
+            RebindVideoAfterDownload(download);
             await _viewModel.Library.LoadCommand.ExecuteAsync(null);
         }
+    }
+
+    /// <summary>
+    /// Points the karaoke screen at the fresh file when the download replaced the song the video
+    /// pipeline currently follows (영상 다시 받기 on the playing song), so the lyrics appear without
+    /// restarting playback. Re-downloads of other rows leave the running video alone.
+    /// </summary>
+    private void RebindVideoAfterDownload(DownloadViewModel download)
+    {
+        if (download.SavedSong is not { } song || download.PreviousFilePath is not { } replaced)
+        {
+            return;
+        }
+
+        if (_videoPlayback.MediaPath is not { } loaded
+            || !string.Equals(Path.GetFullPath(loaded), Path.GetFullPath(replaced), StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _videoPlayback.Load(song.LocalPath);
+        UpdateVideoTarget();
     }
 
     private async void DeleteSong_Click(object? sender, RoutedEventArgs e)
@@ -227,6 +448,9 @@ public partial class MainWindow : Window
         {
             _restoreState = WindowState;
             WindowState = WindowState.FullScreen;
+
+            // 전체화면 = 손님용 화면: show the karaoke screen instead of the library.
+            _viewModel.SetMode(library: false, video: true);
         }
 
         _isFullScreen = !_isFullScreen;

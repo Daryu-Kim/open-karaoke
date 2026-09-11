@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="OpenKaraoke.Desktop.Views.DownloadDialog"
-        Title="노래 다운로드"
+        Title="{Binding DialogTitle}"
         Width="620"
         SizeToContent="Height"
         CanResize="False"
@@ -34,9 +34,9 @@
 
         <!-- 제목 -->
         <StackPanel Grid.Row="0">
-            <TextBlock Text="노래 다운로드" FontSize="26" FontWeight="Bold" />
+            <TextBlock Text="{Binding DialogTitle}" FontSize="26" FontWeight="Bold" />
             <TextBlock Classes="muted" FontSize="14" Margin="0,6,0,0"
-                       Text="라이브러리에 저장할 곡 정보를 확인하고 다운로드하세요." />
+                       Text="{Binding DescriptionText}" />
         </StackPanel>
 
         <!-- 미리보기 + 입력 -->
@@ -78,7 +78,7 @@
 
         <!-- 버튼 -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Classes="primary" Content="다운로드" MinWidth="130" Padding="22,8"
+            <Button Classes="primary" Content="{Binding StartButtonText}" MinWidth="130" Padding="22,8"
                     Command="{Binding StartDownloadCommand}" />
             <Button Classes="ghost" Content="취소" Margin="10,0,0,0"
                     Command="{Binding CancelCommand}" />
