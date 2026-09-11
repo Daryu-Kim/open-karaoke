@@ -81,7 +81,7 @@
             <Button Classes="primary" Content="{Binding StartButtonText}" MinWidth="130" Padding="22,8"
                     Command="{Binding StartDownloadCommand}" />
             <Button Classes="ghost" Content="취소" Margin="10,0,0,0"
-                    Command="{Binding CancelCommand}" />
+                    Command="{Binding CancelCommand}" Click="Cancel_Click" />
         </StackPanel>
     </Grid>
 </Window>

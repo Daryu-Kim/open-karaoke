@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using OpenKaraoke.Desktop.ViewModels;
 
@@ -41,6 +42,12 @@ public partial class DownloadDialog : Window
         {
             _closeTimer.Start();
         }
+    }
+
+    /// <summary>취소 closes the dialog; a download still in flight is aborted by OnClosing.</summary>
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
+    {
+        Close(false);
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
